@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 // Import screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -38,7 +38,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+          let iconName: any;
 
           switch (route.name) {
             case 'Home':
@@ -51,7 +51,7 @@ function MainTabs() {
               iconName = 'folder';
               break;
             case 'Sync':
-              iconName = 'cloud-sync';
+              iconName = 'sync';
               break;
             case 'Settings':
               iconName = 'settings';
@@ -60,7 +60,7 @@ function MainTabs() {
               iconName = 'circle';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return <MaterialIcons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: 'gray',
