@@ -14,7 +14,8 @@ import {
   Coins,
   ArrowUpDown,
   Trash2,
-  ShoppingCart
+  ShoppingCart,
+  Lock
 } from 'lucide-react';
 import ProjectForm from '../components/ProjectForm';
 import CreditMintForm from '../components/CreditMintForm';
@@ -80,16 +81,79 @@ export default function Dashboard() {
     setLoading(false);
   }, [publicKey]);
 
+  // Handle wallet connection state changes
+  useEffect(() => {
+    const walletGatedSections = ['register', 'mint', 'transfer', 'retire'];
+    
+    // If wallet disconnects and user is on a wallet-gated section, redirect to dashboard
+    if (!connected && walletGatedSections.includes(activeSection)) {
+      setActiveSection('dashboard');
+    }
+  }, [connected, activeSection]);
+
+  // Navigation items in the correct order as shown in image
   const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700', iconColor: 'text-blue-600', borderColor: 'border-blue-200' },
-    { id: 'register', label: 'Register Project', icon: TreePine, color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-700', iconColor: 'text-green-600', borderColor: 'border-green-200' },
-    { id: 'mint', label: 'Mint Credits', icon: Coins, color: 'orange', bgColor: 'bg-orange-50', textColor: 'text-orange-700', iconColor: 'text-orange-600', borderColor: 'border-orange-200' },
-    { id: 'transfer', label: 'Transfer Credits', icon: ArrowUpDown, color: 'indigo', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700', iconColor: 'text-indigo-600', borderColor: 'border-indigo-200' },
-    { id: 'retire', label: 'Retire Credits', icon: Trash2, color: 'red', bgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600', borderColor: 'border-red-200' },
-    { id: 'projects', label: 'My Projects', icon: Building2, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-700', iconColor: 'text-purple-600', borderColor: 'border-purple-200' },
-    { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, color: 'pink', bgColor: 'bg-pink-50', textColor: 'text-pink-700', iconColor: 'text-pink-600', borderColor: 'border-pink-200' },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200' }
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700', iconColor: 'text-blue-600', borderColor: 'border-blue-200', requiresWallet: false },
+    { id: 'projects', label: 'My Projects', icon: Building2, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-700', iconColor: 'text-purple-600', borderColor: 'border-purple-200', requiresWallet: false },
+    { id: 'register', label: 'Register Project', icon: TreePine, color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-700', iconColor: 'text-green-600', borderColor: 'border-green-200', requiresWallet: true },
+    { id: 'mint', label: 'Mint Credits', icon: Coins, color: 'orange', bgColor: 'bg-orange-50', textColor: 'text-orange-700', iconColor: 'text-orange-600', borderColor: 'border-orange-200', requiresWallet: true },
+    { id: 'transfer', label: 'Transfer Credits', icon: ArrowUpDown, color: 'indigo', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700', iconColor: 'text-indigo-600', borderColor: 'border-indigo-200', requiresWallet: true },
+    { id: 'retire', label: 'Retire Credits', icon: Trash2, color: 'red', bgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600', borderColor: 'border-red-200', requiresWallet: true },
+    { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, color: 'pink', bgColor: 'bg-pink-50', textColor: 'text-pink-700', iconColor: 'text-pink-600', borderColor: 'border-pink-200', requiresWallet: false },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200', requiresWallet: false }
   ];
+
+  // Helper component for wallet-gated content
+  const WalletGatedContent = ({ children, title, description }: { children: React.ReactNode, title: string, description: string }) => {
+    if (!connected) {
+      // Determine colors based on the title/section
+      let headerBg = 'bg-gradient-to-r from-gray-50 to-gray-25';
+      let titleColor = 'text-gray-700';
+      let descColor = 'text-gray-600';
+      
+      if (title.includes('Register')) {
+        headerBg = 'bg-gradient-to-r from-green-50 to-green-25';
+        titleColor = 'text-green-700';
+        descColor = 'text-green-600';
+      } else if (title.includes('Mint')) {
+        headerBg = 'bg-gradient-to-r from-orange-50 to-orange-25';
+        titleColor = 'text-orange-700';
+        descColor = 'text-orange-600';
+      } else if (title.includes('Transfer')) {
+        headerBg = 'bg-gradient-to-r from-indigo-50 to-indigo-25';
+        titleColor = 'text-indigo-700';
+        descColor = 'text-indigo-600';
+      } else if (title.includes('Retire')) {
+        headerBg = 'bg-gradient-to-r from-red-50 to-red-25';
+        titleColor = 'text-red-700';
+        descColor = 'text-red-600';
+      }
+      
+      return (
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className={`p-6 border-b border-gray-200 ${headerBg}`}>
+            <h3 className={`text-2xl font-black tracking-tight ${titleColor}`}>{title}</h3>
+            <p className={`text-sm font-semibold mt-2 tracking-wide ${descColor}`}>{description}</p>
+          </div>
+          <div className="p-6">
+            <div className="text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Wallet Connection Required</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto font-medium">
+                Connect your Solana wallet to access this feature and start managing your blue carbon projects and credits.
+              </p>
+              <WalletMultiButton />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return children;
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -98,11 +162,16 @@ export default function Dashboard() {
           <div className="space-y-6">
             {/* Welcome Banner */}
             <div className="bg-gradient-to-r from-blue-500 to-green-500 rounded-lg p-6 text-white">
-              <h2 className="text-2xl font-bold mb-2">Welcome to Blue Carbon Registry</h2>
+              <h2 className="text-2xl font-bold mb-2">Welcome to Blue Carbon MRV</h2>
               <p className="text-blue-100 mb-4">Manage carbon credits from blue carbon ecosystems on the Solana blockchain.</p>
               <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                <span className="text-sm">Connected: {publicKey?.toString().slice(0, 8)}...</span>
+                <div className={`w-2 h-2 rounded-full mr-2 ${connected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span className="text-sm">
+                  {connected 
+                    ? `Connected: ${publicKey?.toString().slice(0, 8)}...` 
+                    : 'Wallet not connected'
+                  }
+                </span>
               </div>
             </div>
 
@@ -368,88 +437,108 @@ export default function Dashboard() {
 
       case 'register':
         return (
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Register New Project</h3>
-              <p className="text-sm text-gray-600 mt-1">Register a new blue carbon project on the blockchain</p>
+          <WalletGatedContent 
+            title="Register New Project" 
+            description="Register a new blue carbon project on the blockchain"
+          >
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-green-25">
+                <h3 className="text-2xl font-black text-green-700 tracking-tight">Register New Project</h3>
+                <p className="text-sm font-semibold text-green-600 mt-2 tracking-wide">Register a new blue carbon project on the blockchain</p>
+              </div>
+              <div className="p-6">
+                <ProjectForm 
+                  onSubmit={async (data) => {
+                    // Handle project registration
+                    console.log('Project data:', data);
+                    return { success: true };
+                  }}
+                  onCancel={() => setActiveSection('dashboard')}
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <ProjectForm 
-                onSubmit={async (data) => {
-                  // Handle project registration
-                  console.log('Project data:', data);
-                  return { success: true };
-                }}
-                onCancel={() => setActiveSection('dashboard')}
-              />
-            </div>
-          </div>
+          </WalletGatedContent>
         );
 
       case 'mint':
         return (
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Mint Carbon Credits</h3>
-              <p className="text-sm text-gray-600 mt-1">Issue new carbon credits for verified sequestration</p>
+          <WalletGatedContent 
+            title="Mint Carbon Credits" 
+            description="Issue new carbon credits for verified sequestration"
+          >
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-orange-25">
+                <h3 className="text-2xl font-black text-orange-700 tracking-tight">Mint Carbon Credits</h3>
+                <p className="text-sm font-semibold text-orange-600 mt-2 tracking-wide">Issue new carbon credits for verified sequestration</p>
+              </div>
+              <div className="p-6">
+                <CreditMintForm 
+                  projectId="BCP-001"
+                  onSubmit={async (data) => {
+                    console.log('Mint data:', data);
+                    return { success: true };
+                  }}
+                  onCancel={() => setActiveSection('dashboard')}
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <CreditMintForm 
-                projectId="BCP-001"
-                onSubmit={async (data) => {
-                  console.log('Mint data:', data);
-                  return { success: true };
-                }}
-                onCancel={() => setActiveSection('dashboard')}
-              />
-            </div>
-          </div>
+          </WalletGatedContent>
         );
 
       case 'transfer':
         return (
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Transfer Credits</h3>
-              <p className="text-sm text-gray-600 mt-1">Transfer carbon credits to another wallet</p>
+          <WalletGatedContent 
+            title="Transfer Credits" 
+            description="Transfer carbon credits to another wallet"
+          >
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-indigo-25">
+                <h3 className="text-2xl font-black text-indigo-700 tracking-tight">Transfer Credits</h3>
+                <p className="text-sm font-semibold text-indigo-600 mt-2 tracking-wide">Transfer carbon credits to another wallet</p>
+              </div>
+              <div className="p-6">
+                <CreditTransferForm 
+                  onSubmit={async (data) => {
+                    console.log('Transfer data:', data);
+                    return { success: true };
+                  }}
+                  onCancel={() => setActiveSection('dashboard')}
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <CreditTransferForm 
-                onSubmit={async (data) => {
-                  console.log('Transfer data:', data);
-                  return { success: true };
-                }}
-                onCancel={() => setActiveSection('dashboard')}
-              />
-            </div>
-          </div>
+          </WalletGatedContent>
         );
 
       case 'retire':
         return (
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Retire Credits</h3>
-              <p className="text-sm text-gray-600 mt-1">Permanently retire carbon credits to offset emissions</p>
+          <WalletGatedContent 
+            title="Retire Credits" 
+            description="Permanently retire carbon credits to offset emissions"
+          >
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-red-50 to-red-25">
+                <h3 className="text-2xl font-black text-red-700 tracking-tight">Retire Credits</h3>
+                <p className="text-sm font-semibold text-red-600 mt-2 tracking-wide">Permanently retire carbon credits to offset emissions</p>
+              </div>
+              <div className="p-6">
+                <CreditRetireForm 
+                  onSubmit={async (data) => {
+                    console.log('Retire data:', data);
+                    return { success: true };
+                  }}
+                  onCancel={() => setActiveSection('dashboard')}
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <CreditRetireForm 
-                onSubmit={async (data) => {
-                  console.log('Retire data:', data);
-                  return { success: true };
-                }}
-                onCancel={() => setActiveSection('dashboard')}
-              />
-            </div>
-          </div>
+          </WalletGatedContent>
         );
 
       case 'projects':
         return (
           <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">My Projects</h3>
-              <p className="text-sm text-gray-600 mt-1">Manage your registered blue carbon projects</p>
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-25">
+              <h3 className="text-2xl font-black text-purple-700 tracking-tight">My Projects</h3>
+              <p className="text-sm font-semibold text-purple-600 mt-2 tracking-wide">Manage your registered blue carbon projects</p>
             </div>
             <div className="p-6">
               {loading ? (
@@ -520,21 +609,25 @@ export default function Dashboard() {
       case 'analytics':
         return (
           <div className="space-y-6">
-            {/* Header with controls */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
-                <p className="text-gray-600 mt-1">Comprehensive insights into blue carbon credit ecosystem</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                  <option>Last 30 days</option>
-                  <option>Last 90 days</option>
-                  <option>Last year</option>
-                </select>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                  Export Report
-                </button>
+            {/* Header Section */}
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-emerald-25">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-black text-emerald-700 tracking-tight">Analytics Dashboard</h3>
+                    <p className="text-sm font-semibold text-emerald-600 mt-2 tracking-wide">Comprehensive insights into blue carbon credit ecosystem</p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium">
+                      <option>Last 30 days</option>
+                      <option>Last 90 days</option>
+                      <option>Last year</option>
+                    </select>
+                    <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-semibold transition-colors">
+                      Export Report
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -777,9 +870,9 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Carbon Credit Marketplace</h3>
-                <p className="text-sm text-gray-600 mt-1">Buy and sell verified carbon credits</p>
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-pink-25">
+                <h3 className="text-2xl font-black text-pink-700 tracking-tight">Carbon Credit Marketplace</h3>
+                <p className="text-sm font-semibold text-pink-600 mt-2 tracking-wide">Buy and sell verified carbon credits</p>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -887,80 +980,136 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Top Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-4 backdrop-blur-md bg-white/95">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 px-8 py-4 shadow-sm">
         <div className="flex items-center justify-between max-w-full">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/bluecarbon3.png" 
-                alt="Blue Carbon Registry" 
-                className="h-10 w-10 rounded-full"
-              />
-              <h1 className="text-xl font-bold text-gray-900">Blue Carbon Registry</h1>
+          <div className="flex items-center space-x-5">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img 
+                  src="/bluecarbon3.png" 
+                  alt="Blue Carbon MRV" 
+                  className="h-12 w-12 rounded-xl shadow-md ring-2 ring-blue-100"
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight">Blue Carbon MRV</h1>
+                <p className="text-sm font-semibold text-blue-600 tracking-wide">Sustainable Carbon Credits</p>
+              </div>
             </div>
           </div>
+          
+          {/* Status and Connection Info */}
           <div className="flex items-center space-x-4">
-            <WalletMultiButton />
+            {/* Network Status */}
+            <div className="flex items-center space-x-3 px-4 py-2.5 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="relative">
+                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                <div className="absolute inset-0 w-3 h-3 bg-orange-400 rounded-full animate-ping opacity-75"></div>
+              </div>
+              <span className="text-sm font-bold text-orange-800 tracking-wide">Devnet</span>
+            </div>
+            
+            {/* Connection Status */}
+            <div className={`flex items-center space-x-3 px-4 py-2.5 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${
+              connected 
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-800' 
+                : 'bg-gradient-to-r from-red-50 to-red-100 border-red-200 text-red-800'
+            }`}>
+              <div className="relative">
+                <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                {connected && (
+                  <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-pulse opacity-75"></div>
+                )}
+              </div>
+              <span className="text-sm font-bold tracking-wide">
+                {connected ? 'Connected' : 'Disconnected'}
+              </span>
+            </div>
+            
+            {/* Wallet Button */}
+            <div className="wallet-button-container">
+              <WalletMultiButton />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex pt-20">
         {/* Fixed Sidebar */}
-        <div className="fixed left-0 top-20 bottom-0 w-64 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 shadow-lg overflow-y-auto">
-          {/* Sidebar Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/bluecarbon3.png" 
-                alt="Blue Carbon Registry" 
-                className="h-8 w-8 rounded-full"
-              />
-              <span className="font-bold text-gray-900 text-sm">Blue Carbon</span>
-            </div>
-          </div>
-          
-          <nav className="p-6 space-y-3 pb-20">
-            {sidebarItems.map((item) => {
+        <div className="fixed left-0 top-20 bottom-0 w-64 bg-gradient-to-b from-gray-50/80 to-white/90 backdrop-blur-sm border-r border-gray-200/60 shadow-xl overflow-y-auto">
+          <nav className="p-4 space-y-2 pt-6">{sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
+              const isWalletGated = item.requiresWallet;
+              const isLocked = isWalletGated && !connected;
+              
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveSection(item.id as SidebarSection)}
-                  className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md ${
-                    isActive
-                      ? `${item.bgColor} ${item.textColor} border-2 ${item.borderColor} shadow-md`
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 border-2 border-transparent'
+                  onClick={() => {
+                    if (isLocked) {
+                      // Don't allow navigation to wallet-gated sections when not connected
+                      return;
+                    }
+                    setActiveSection(item.id as SidebarSection);
+                  }}
+                  className={`group relative w-full flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
+                    isLocked
+                      ? 'text-gray-400 bg-gray-50/50 border-2 border-gray-200/30 cursor-not-allowed'
+                      : isActive
+                      ? `${item.bgColor} ${item.textColor} border-2 ${item.borderColor} shadow-lg backdrop-blur-sm`
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-white/80 hover:shadow-md border-2 border-transparent hover:border-gray-200/50 backdrop-blur-sm'
                   }`}
                 >
-                  <div className={`p-2 rounded-lg mr-3 ${
-                    isActive 
-                      ? `bg-white shadow-sm`
-                      : 'bg-gray-100'
+                  <div className={`relative p-2 rounded-xl mr-3 transition-all duration-300 ${
+                    isLocked
+                      ? 'bg-gray-100/50'
+                      : isActive 
+                      ? `bg-white shadow-lg border border-white/50`
+                      : 'bg-gray-100/80 group-hover:bg-white/90 group-hover:shadow-sm'
                   }`}>
-                    <Icon className={`h-5 w-5 ${
-                      isActive 
+                    <Icon className={`h-5 w-5 transition-all duration-300 ${
+                      isLocked
+                        ? 'text-gray-400'
+                        : isActive 
                         ? item.iconColor
-                        : 'text-gray-500'
+                        : 'text-gray-500 group-hover:text-gray-700'
                     }`} />
+                    {isActive && !isLocked && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent"></div>
+                    )}
                   </div>
-                  <span className="flex-1 text-left font-bold tracking-wide">{item.label}</span>
-                  {isActive && (
-                    <div className={`p-1 rounded-full ${item.bgColor}`}>
+                  <span className="flex-1 text-left font-black tracking-wide">{item.label}</span>
+                  
+                  {/* Show lock icon for wallet-gated items when not connected */}
+                  {isLocked && (
+                    <div className="p-1 rounded-xl bg-gray-200/50">
+                      <Lock className="h-4 w-4 text-gray-400" />
+                    </div>
+                  )}
+                  
+                  {/* Show chevron for active non-locked items */}
+                  {isActive && !isLocked && (
+                    <div className={`p-1 rounded-xl ${item.bgColor} shadow-md`}>
                       <ChevronRight className={`h-4 w-4 ${item.iconColor}`} />
                     </div>
+                  )}
+                  
+                  {/* Modern glass effect overlay - disabled for locked items */}
+                  {!isLocked && (
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
                 </button>
               );
             })}
           </nav>
           
-          {/* Sidebar Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200 bg-gradient-to-t from-gray-50">
-            <div className="text-center">
-              <p className="text-xs font-medium text-gray-500">Powered by Solana</p>
-              <p className="text-xs text-gray-400 mt-1">v1.0.0</p>
+          {/* Sidebar Footer - positioned after navigation */}
+          <div className="mt-4 mx-4 mb-4 pt-4 border-t border-gray-200/60 bg-white/30 backdrop-blur-sm rounded-xl">
+            <div className="text-center p-3">
+              <p className="text-xs font-black text-gray-600 tracking-wide">POWERED BY SOLANA</p>
+              <p className="text-xs font-bold text-gray-500 mt-1 tracking-wider">v1.0.0</p>
             </div>
           </div>
         </div>
@@ -972,10 +1121,10 @@ export default function Dashboard() {
               <div className="max-w-md mx-auto">
                 <img 
                   src="/bluecarbon3.png" 
-                  alt="Blue Carbon Registry" 
+                  alt="Blue Carbon MRV" 
                   className="h-24 w-24 mx-auto mb-4 rounded-full shadow-lg"
                 />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Blue Carbon Registry</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Blue Carbon MRV</h2>
                 <p className="text-gray-600 mb-6">
                   Connect your wallet to start managing blue carbon projects and carbon credits on the Solana blockchain.
                 </p>
