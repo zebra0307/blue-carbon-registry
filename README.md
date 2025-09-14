@@ -1,33 +1,156 @@
-# Blue Carbon Registry
+# 🌊 Blue Carbon Registry
 
-A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management.
+> A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management.
+
+[![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)](https://solana.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 ## 🌐 Live Demo
 **🚀 [View Live Web App](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)**
 
-## 🏗️ Technology Stack
+## � Project Overview
 
-- **Blockchain**: Solana, Anchor Framework
-- **Web Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Mobile Frontend**: React Native, Expo SDK 54
-- **Backend**: Node.js, Express
-- **Database**: SQLite (Mobile), PostgreSQL (Backend)
-- **Storage**: IPFS for metadata
-- **Deployment**: Vercel (Web), EAS Build (Mobile)
-- **Tokens**: SPL Token standard
+Blue Carbon Registry is a comprehensive blockchain-based platform that enables transparent tracking, verification, and trading of carbon credits. Built on Solana for high performance and low transaction costs, the platform includes both web and mobile applications for complete ecosystem management.
 
-## 📱 Live Applications
+### 🎯 Key Features
 
-- **Web Dashboard**: [https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)
-- **Mobile App**: Available for development testing (Expo Go)
+- 🌱 **Project Registration** - Register carbon offset projects on-chain with immutable records
+- 🪙 **Credit Minting** - Issue verified carbon credits as SPL tokens  
+- 🔄 **Credit Trading** - Seamless transfer and trading of credits between accounts
+- 🔥 **Credit Retirement** - Permanently retire credits for verified offset claims
+- 📊 **IPFS Integration** - Decentralized metadata and document storage
+- 📱 **Cross-platform Apps** - Professional web dashboard and mobile data collection
+- 📸 **Field Data Collection** - Mobile camera integration for on-site verification
+- 💾 **Offline Capabilities** - SQLite database with sync for remote field work
+- 🌐 **Wallet Integration** - Support for all major Solana wallets
+
+## 🏗️ Architecture
+
+### 📁 Project Structure
+
+```
+blue-carbon-registry/
+├── programs/blue-carbon-registry/    # Solana smart contracts
+├── web-app/                         # Next.js dashboard
+├── mobile-app/                      # React Native field app  
+├── backend-bridge/                  # Node.js API services
+├── shared/                         # Common utilities
+└── data/                          # Field reports & imagery
+```
+
+### 🔧 Technology Stack
+
+| Component | Technology | Version |
+|-----------|------------|---------|
+| **Blockchain** | Solana, Anchor Framework | Latest |
+| **Web Frontend** | Next.js, TypeScript, Tailwind CSS | 14.2.32 |
+| **Mobile Frontend** | React Native, Expo SDK | 54.0+ |
+| **Backend** | Node.js, Express | 18+ |
+| **Database** | SQLite (Mobile), PostgreSQL (Backend) | Latest |
+| **Storage** | IPFS, Vercel | Latest |
+| **Deployment** | Vercel (Web), EAS Build (Mobile) | Latest |
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Rust 1.70+
+- Solana CLI
+- Anchor CLI
+- Expo CLI (for mobile)
+
+### 🌐 Web Application
+```bash
+# Navigate to web app
+cd web-app
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### 📱 Mobile Application
+```bash
+# Navigate to mobile app
+cd mobile-app
+
+# Install dependencies
+npm install
+
+# Start Expo development server
+npx expo start
+
+# Run on devices
+npx expo run:ios     # iOS
+npx expo run:android # Android
+```
+
+### ⛓️ Smart Contract Development
+```bash
+# Build the program
+anchor build
+
+# Run tests
+anchor test
+
+# Deploy to devnet
+anchor deploy --provider.cluster devnet
+```
+
+## 📱 Application Features
+
+### Web Dashboard
+- 🎛️ **Project Management** - Create and manage carbon credit projects
+- 📊 **Analytics Dashboard** - Real-time statistics and visualizations  
+- 🔗 **Wallet Integration** - Connect with Phantom, Solflare, and other Solana wallets
+- 📈 **Trading Interface** - Buy, sell, and retire carbon credits
+- 📋 **Verification Tools** - Review and approve field reports
+
+### Mobile App
+- 📸 **Camera Integration** - Capture geo-tagged field photos
+- 📍 **GPS Tracking** - Automatic location logging for verification
+- 💾 **Offline Storage** - SQLite database for remote field work
+- 🔄 **Data Synchronization** - Sync with backend when connectivity available
+- 📊 **Data Collection Forms** - Structured field report creation
+
+## 🌍 Use Cases
+
+- **🏢 Carbon Credit Issuers** - Register and manage offset projects
+- **🏭 Enterprises** - Purchase and retire credits for sustainability goals  
+- **🔬 Verifiers** - Conduct field verification and data collection
+- **💼 Traders** - Buy and sell verified carbon credits
+- **📊 Researchers** - Access transparent carbon offset data
 
 ## 🤝 Contributing
 
-Please read our contributing guidelines before submitting pull requests.
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
-## 📄 License
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-This project is licensed under the MIT License.or transparent and verifiable carbon offset management.
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**🌊 Building the future of transparent carbon markets 🌊**
+
+[Live Demo](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app) • [Documentation](docs/) • [Report Bug](issues/) • [Request Feature](issues/)
+
+</div>or transparent and verifiable carbon offset management.
 
 ## 🌟 Current Status
 
