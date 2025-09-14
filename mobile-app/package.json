@@ -1,22 +1,57 @@
 {
-  "name": "mobile-app",
+  "name": "blue-carbon-mobile",
   "version": "1.0.0",
-  "description": "Mobile app for Blue Carbon Registry",
-  "main": "index.js",
+  "description": "Mobile data collection app for Blue Carbon Registry",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "expo build",
+    "test": "jest"
   },
   "dependencies": {
-    "expo": "~50.0.0",
-    "react": "18.2.0",
-    "react-native": "0.73.6",
-    "@solana/web3.js": "^1.95.4"
+    "@hookform/resolvers": "^3.3.2",
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/stack": "^6.4.1",
+    "@solana/web3.js": "^1.95.4",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "expo": "~54.0.0",
+    "expo-application": "~6.0.2",
+    "expo-camera": "~16.0.8",
+    "expo-constants": "~17.0.3",
+    "expo-file-system": "~18.0.4",
+    "expo-location": "~18.0.2",
+    "expo-media-library": "~17.0.3",
+    "expo-network": "~7.0.0",
+    "expo-sqlite": "~15.0.2",
+    "expo-status-bar": "~2.0.0",
+    "moment": "^2.29.4",
+    "react": "18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "react-native": "0.76.1",
+    "react-native-gesture-handler": "~2.20.2",
+    "react-native-maps": "1.18.0",
+    "react-native-paper": "^5.12.5",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.1.0",
+    "react-native-vector-icons": "^10.0.3",
+    "stream-browserify": "^3.0.0",
+    "uuid": "^9.0.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "typescript": "^5.0.0"
-  }
+    "@types/jest": "^29.5.12",
+    "@types/react": "~18.3.3",
+    "@types/uuid": "^10.0.0",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  },
+  "private": true
 }
