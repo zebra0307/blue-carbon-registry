@@ -1,10 +1,29 @@
 {
   "name": "blue-carbon-registry",
-  "version": "1.0.0",
-  "license": "ISC",
+  "version": "1.2.0",
+  "description": "A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zebra0307/blue-carbon-registry.git"
+  },
+  "keywords": [
+    "solana",
+    "blockchain",
+    "carbon-credits",
+    "defi",
+    "web3",
+    "react-native",
+    "nextjs",
+    "expo"
+  ],
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "build:web": "cd web-app && npm run build",
+    "build:mobile": "cd mobile-app && npx expo build",
+    "start:web": "cd web-app && npm run dev",
+    "start:mobile": "cd mobile-app && npx expo start"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

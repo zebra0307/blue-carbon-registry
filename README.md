@@ -1,35 +1,69 @@
 # Blue Carbon Registry
 
-A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management.
+A decentralized carbon credit registry built on So```
 
-## Project Structure
+## 🏗️ Technology Stack
 
-### `/blockchain/` - Smart Contract Layer
-- **`/programs/`** - Solana programs (smart contracts)
-- **`/tests/`** - Integration tests for blockchain functionality
-- **`/scripts/`** - Deployment and interaction scripts
+- **Blockchain**: Solana, Anchor Framework
+- **Web Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Mobile Frontend**: React Native, Expo SDK 54
+- **Backend**: Node.js, Express
+- **Database**: SQLite (Mobile), PostgreSQL (Backend)
+- **Storage**: IPFS for metadata
+- **Deployment**: Vercel (Web), EAS Build (Mobile)
+- **Tokens**: SPL Token standard
 
-### `/web-app/` - Web Frontend
-- **`/src/components/`** - Reusable UI components
-- **`/src/pages/`** - Web application pages
-- **`/src/api/`** - Blockchain and off-chain data access
+## 📱 Live Applications
 
-### `/mobile-app/` - Mobile Frontend
-- **`/src/components/`** - Mobile UI components
-- **`/src/screens/`** - Mobile application screens
-- **`/src/api/`** - Mobile blockchain integration
+- **Web Dashboard**: [https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)
+- **Mobile App**: Available for development testing (Expo Go)
 
-### `/backend-bridge/` - Off-chain Services
-- **`/src/services/`** - IPFS upload, data aggregation
-- **`/src/routes/`** - API endpoints for client data
+## 🤝 Contributing
 
-### `/shared/` - Common Code
-- **`/constants/`** - Global constants (contract addresses, etc.)
-- **`/utils/`** - Utility functions shared across platforms
+Please read our contributing guidelines before submitting pull requests.
 
-### `/data/` - Raw Data Storage
-- **`/field-reports/`** - Field measurement data
-- **`/drone-imagery/`** - Aerial survey data
+## 📄 License
+
+This project is licensed under the MIT License.or transparent and verifiable carbon offset management.
+
+## 🌟 Current Status
+
+✅ **Mobile App**: Fully functional with Expo SDK 54  
+✅ **Web App**: Deployed on Vercel with Solana integration  
+✅ **Smart Contracts**: Deployed on Solana blockchain  
+✅ **Live Demo**: [https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)
+
+## 📁 Project Structure
+
+### `/programs/blue-carbon-registry/` - Smart Contract Layer
+- **`src/lib.rs`** - Main Solana program implementation
+- **`Cargo.toml`** - Rust dependencies and metadata
+- Deployed smart contract for carbon credit management
+
+### `/web-app/` - Next.js Web Frontend
+- **`src/app/`** - Next.js 14 app router pages
+- **`src/components/`** - Reusable UI components with Solana integration
+- **`src/api/`** - Blockchain and off-chain data access
+- **Deployment**: Auto-deployed via Vercel on git push
+
+### `/mobile-app/` - React Native Mobile App
+- **`src/components/`** - Mobile UI components
+- **`src/screens/`** - Mobile application screens (Camera, Data Collection, etc.)
+- **`src/providers/`** - Database, Location, and Sync providers
+- **`src/types/`** - TypeScript type definitions
+- **SDK**: Expo SDK 54 with SQLite async API
+
+### `/backend-bridge/` - Node.js Services
+- **`src/services/`** - IPFS upload, data aggregation services
+- **`src/routes/`** - API endpoints for client applications
+
+### `/shared/` - Common Libraries
+- **`constants/`** - Shared constants across platforms
+- **`utils/`** - Utility functions for mobile and web
+
+### `/data/` - Data Storage
+- **`field-reports/`** - Field measurement data
+- **`drone-imagery/`** - Aerial survey imagery and data
 
 ## Features
 
