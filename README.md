@@ -1,6 +1,9 @@
 # Blue Carbon Registry
 
-A decentralized carbon credit registry built on So```
+A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management.
+
+## 🌐 Live Demo
+**🚀 [View Live Web App](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)**
 
 ## 🏗️ Technology Stack
 
