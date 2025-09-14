@@ -326,7 +326,14 @@ export default function Dashboard() {
           ) : projects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
               {projects.map((project) => (
-                <ProjectCard key={project.projectId} project={project} />
+                <ProjectCard 
+                  key={project.projectId} 
+                  project={project} 
+                  onViewDetails={(project) => {
+                    console.log('View details for project:', project.projectId);
+                    // Add navigation logic here if needed
+                  }}
+                />
               ))}
             </div>
           ) : (

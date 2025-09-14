@@ -6,9 +6,8 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Blue Carbon Registry',
-  description: 'Decentralized carbon credit registry on Solana blockchain',
-  keywords: ['carbon credits', 'blockchain', 'solana', 'climate', 'sustainability'],
-};
+  description: 'Decentralized blue carbon credit management on Solana',
+}
 
 export default function RootLayout({
   children,
