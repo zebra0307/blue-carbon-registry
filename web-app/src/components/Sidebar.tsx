@@ -37,17 +37,17 @@ export default function Sidebar({ isOpen, onClose, activeSection, onSectionChang
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:shadow-none`}
+        className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white shadow-xl border-r border-gray-200 z-30
+        transform transition-transform duration-300 ease-in-out lg:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🌊</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-white rounded-lg flex items-center justify-center border border-blue-100 shadow-md hover:shadow-lg transition-all duration-300">
+              <img src="/logo.svg" alt="Blue Carbon Registry" className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Blue Carbon</h2>
+            <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Blue Carbon</h2>
           </div>
           <button
             onClick={onClose}

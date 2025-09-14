@@ -8,7 +8,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { Camera, CameraType, FlashMode } from 'expo-camera';
+import { CameraView, CameraType, FlashMode, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { Button, Surface, TextInput, Modal, Portal } from 'react-native-paper';
@@ -23,17 +23,18 @@ const { width, height } = Dimensions.get('window');
 
 const CameraScreen = ({ navigation, route }: any) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [cameraType, setCameraType] = useState(CameraType.back);
-  const [flashMode, setFlashMode] = useState(FlashMode.off);
+  const [cameraType, setCameraType] = useState<CameraType>('back');
+  const [flashMode, setFlashMode] = useState<FlashMode>('off');
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [photoDescription, setPhotoDescription] = useState('');
   const [photoType, setPhotoType] = useState<PhotoData['type']>('field');
   const [isSaving, setIsSaving] = useState(false);
 
-  const cameraRef = useRef<Camera>(null);
+  const cameraRef = useRef<CameraView>(null);
   const { getCurrentLocation } = useLocation();
   const { savePhoto: savePhotoToDatabase } = useDatabase();
+  const [permission, requestPermission] = useCameraPermissions();
 
   const measurementId = route?.params?.measurementId;
 
@@ -41,23 +42,22 @@ const CameraScreen = ({ navigation, route }: any) => {
     requestPermissions();
   }, []);
 
-  const requestPermissions = async () => {
+    const requestPermissions = async () => {
     try {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
-      
-      if (cameraStatus.status === 'granted' && mediaStatus.status === 'granted') {
-        setHasPermission(true);
+      if (!permission?.granted) {
+        const result = await requestPermission();
+        if (result.granted) {
+          setHasPermission(true);
+        } else {
+          setHasPermission(false);
+        }
       } else {
-        setHasPermission(false);
-        Alert.alert(
-          'Permissions Required',
-          'Camera and media library permissions are required to take photos.',
-          [
-            { text: 'Cancel', onPress: () => navigation.goBack() },
-            { text: 'Retry', onPress: requestPermissions },
-          ]
-        );
+        setHasPermission(true);
+      }
+      
+      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
+      if (mediaStatus.status !== 'granted') {
+        Alert.alert('Permission Required', 'Media library access is required to save photos.');
       }
     } catch (error) {
       console.error('Error requesting permissions:', error);
@@ -171,32 +171,30 @@ const CameraScreen = ({ navigation, route }: any) => {
 
   const toggleCameraType = () => {
     setCameraType(
-      cameraType === CameraType.back ? CameraType.front : CameraType.back
+      cameraType === 'back' ? 'front' : 'back'
     );
   };
 
   const toggleFlash = () => {
     setFlashMode(
-      flashMode === FlashMode.off 
-        ? FlashMode.on 
-        : flashMode === FlashMode.on 
-        ? FlashMode.auto 
-        : FlashMode.off
+      flashMode === 'off'
+        ? 'on'
+        : flashMode === 'on'
+        ? 'auto'
+        : 'off'
     );
   };
 
   const getFlashIcon = () => {
     switch (flashMode) {
-      case FlashMode.on:
+      case 'on':
         return 'flash-on';
-      case FlashMode.auto:
+      case 'auto':
         return 'flash-auto';
       default:
         return 'flash-off';
     }
-  };
-
-  if (hasPermission === null) {
+  };  if (hasPermission === null) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Requesting camera permissions...</Text>
@@ -217,11 +215,11 @@ const CameraScreen = ({ navigation, route }: any) => {
 
   return (
     <View style={styles.container}>
-      <Camera
+      <CameraView
         ref={cameraRef}
         style={styles.camera}
-        type={cameraType}
-        flashMode={flashMode}
+        facing={cameraType}
+        flash={flashMode}
       >
         {/* Header Controls */}
         <View style={styles.header}>
@@ -263,7 +261,7 @@ const CameraScreen = ({ navigation, route }: any) => {
           <View style={styles.gridLineVertical} />
           <View style={styles.gridLineVertical} />
         </View>
-      </Camera>
+      </CameraView>
 
       {/* Photo Preview Modal */}
       <Portal>
