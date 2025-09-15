@@ -15,7 +15,8 @@ import {
   ArrowUpDown,
   Trash2,
   ShoppingCart,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 import ProjectForm from '../components/ProjectForm';
 import CreditMintForm from '../components/CreditMintForm';
@@ -23,6 +24,8 @@ import CreditTransferForm from '../components/CreditTransferForm';
 import CreditRetireForm from '../components/CreditRetireForm';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import MarketplaceComponent from '../components/MarketplaceComponent';
+import VerificationSystem from '../components/VerificationSystem';
+import { VerificationData, VerificationStatus } from '@/types';
 
 interface Project {
   projectId: string;
@@ -34,6 +37,8 @@ interface Project {
   owner: any;
   bump: number;
   ipfsCid: string;
+  verification: VerificationData;
+  canMintCredits: boolean;
 }
 
 type ModalType = 'register' | 'mint' | 'transfer' | 'retire' | null;
@@ -65,7 +70,19 @@ export default function Dashboard() {
         creditsIssued: 12500,
         owner: publicKey || new (require('@solana/web3.js')).PublicKey('11111111111111111111111111111111'),
         bump: 255,
-        ipfsCid: 'QmExample1'
+        ipfsCid: 'QmExample1',
+        verification: {
+          status: 'approved',
+          submittedAt: new Date('2024-01-15'),
+          reviewedAt: new Date('2024-02-01'),
+          verifiedBy: 'Carbon Verification International',
+          verificationNotes: 'Project meets all verification standards. Field verification completed successfully.',
+          requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+          submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+          fieldVerificationDate: new Date('2024-01-25'),
+          scientificReviewDate: new Date('2024-01-30')
+        },
+        canMintCredits: true
       },
       {
         projectId: 'BCP-002',
@@ -76,7 +93,18 @@ export default function Dashboard() {
         creditsIssued: 9800,
         owner: publicKey || new (require('@solana/web3.js')).PublicKey('11111111111111111111111111111111'),
         bump: 254,
-        ipfsCid: 'QmExample2'
+        ipfsCid: 'QmExample2',
+        verification: {
+          status: 'field_verification',
+          submittedAt: new Date('2024-02-10'),
+          reviewedAt: new Date('2024-02-15'),
+          verifiedBy: 'Marine Conservation Verifiers',
+          verificationNotes: 'Initial documentation approved. Field verification scheduled for next week.',
+          requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment', 'Marine Survey'],
+          submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+          fieldVerificationDate: new Date('2024-02-20')
+        },
+        canMintCredits: false
       }
     ];
     setProjects(mockProjects);
@@ -451,9 +479,70 @@ export default function Dashboard() {
               <div className="p-6">
                 <ProjectForm 
                   onSubmit={async (data) => {
-                    // Handle project registration
-                    console.log('Project data:', data);
-                    return { success: true };
+                    try {
+                      // Import necessary modules
+                      const { Program, AnchorProvider, web3 } = await import('@coral-xyz/anchor');
+                      
+                      if (!publicKey || !connected) {
+                        throw new Error('Wallet not connected');
+                      }
+
+                      // Create a project with proper verification system
+                      const newProject: Project = {
+                        projectId: data.projectId,
+                        name: data.name,
+                        location: data.location,
+                        area: Math.floor(Math.random() * 1000) + 100, // Mock area
+                        carbonStored: Math.floor(Math.random() * 10000) + 1000, // Mock carbon stored
+                        creditsIssued: 0, // New project starts with 0 credits
+                        owner: publicKey,
+                        bump: 0,
+                        ipfsCid: `QmExample${Date.now()}`, // Mock IPFS CID
+                        verification: {
+                          status: 'pending',
+                          submittedAt: new Date(),
+                          requiredDocuments: [
+                            'Project Proposal',
+                            'Land Rights Documentation',
+                            'Baseline Carbon Measurements',
+                            'Environmental Impact Assessment',
+                            'Restoration Plan',
+                            'Monitoring Protocol',
+                            'GPS Coordinates Verification',
+                            'Photographic Evidence'
+                          ],
+                          submittedDocuments: [
+                            'Project Proposal', // Assume basic form submission provides this
+                            'GPS Coordinates Verification' // Location provided
+                          ],
+                          verificationNotes: 'Initial project submission received. Awaiting document review.'
+                        },
+                        canMintCredits: false // Cannot mint until verified
+                      };
+
+                      // Add to local projects list
+                      setProjects(prev => [...prev, newProject]);
+                      
+                      // Update stats
+                      setStats(prev => ({
+                        ...prev,
+                        totalProjects: prev.totalProjects + 1
+                      }));
+
+                      // Show success message with verification info
+                      alert(`Project "${data.name}" registered successfully!\n\nNext Steps:\n1. Your project is now under review\n2. Please submit required documents\n3. Verification process typically takes 7-14 days\n4. You'll be notified when verification is complete\n\nNote: Credit minting is disabled until project verification is complete.`);
+                      
+                      // Navigate back to projects view
+                      setActiveSection('projects');
+                      
+                      return { success: true };
+                    } catch (error) {
+                      console.error('Error registering project:', error);
+                      return { 
+                        success: false, 
+                        error: error instanceof Error ? error.message : 'Failed to register project'
+                      };
+                    }
                   }}
                   onCancel={() => setActiveSection('dashboard')}
                 />
@@ -474,14 +563,48 @@ export default function Dashboard() {
                 <p className="text-sm font-semibold text-orange-600 mt-2 tracking-wide">Issue new carbon credits for verified sequestration</p>
               </div>
               <div className="p-6">
-                <CreditMintForm 
-                  projectId="BCP-001"
-                  onSubmit={async (data) => {
-                    console.log('Mint data:', data);
-                    return { success: true };
-                  }}
-                  onCancel={() => setActiveSection('dashboard')}
-                />
+                {/* Verification Status Check */}
+                {projects.length > 0 && projects.some(p => p.verification.status === 'approved') ? (
+                  <CreditMintForm 
+                    projectId="BCP-001"
+                    onSubmit={async (data) => {
+                      console.log('Mint data:', data);
+                      return { success: true };
+                    }}
+                    onCancel={() => setActiveSection('dashboard')}
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="mb-4">
+                      <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">No Verified Projects Available</h4>
+                      <p className="text-gray-600 mb-4">
+                        You need at least one verified project before you can mint carbon credits.
+                      </p>
+                    </div>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                      <h5 className="font-medium text-yellow-800 mb-2">Verification Requirements:</h5>
+                      <ul className="text-sm text-yellow-700 text-left list-disc list-inside space-y-1">
+                        <li>Submit all required documentation</li>
+                        <li>Pass field verification by certified assessors</li>
+                        <li>Complete scientific review of carbon data</li>
+                        <li>Obtain final approval from verification team</li>
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => setActiveSection('register')}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mr-4"
+                    >
+                      Register New Project
+                    </button>
+                    <button
+                      onClick={() => setActiveSection('projects')}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      View My Projects
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </WalletGatedContent>
@@ -551,43 +674,71 @@ export default function Dashboard() {
               ) : projects.length > 0 ? (
                 <div className="grid gap-6">
                   {projects.map((project) => (
-                    <div key={project.projectId} className="border rounded-lg p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-4">
-                          <div className="p-3 bg-green-100 rounded-lg">
-                            <TreePine className="h-6 w-6 text-green-600" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-medium text-gray-900">{project.name}</h4>
-                            <p className="text-gray-600">{project.location}</p>
-                            <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-gray-500">Area:</span>
-                                <span className="ml-2 font-medium">{project.area} hectares</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Carbon Stored:</span>
-                                <span className="ml-2 font-medium">{project.carbonStored} tons CO₂</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Credits Issued:</span>
-                                <span className="ml-2 font-medium">{project.creditsIssued.toLocaleString()}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Project ID:</span>
-                                <span className="ml-2 font-medium">{project.projectId}</span>
+                    <div key={project.projectId} className="border rounded-lg overflow-hidden">
+                      {/* Project Header */}
+                      <div className="p-6 border-b">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-4">
+                            <div className="p-3 bg-green-100 rounded-lg">
+                              <TreePine className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-medium text-gray-900">{project.name}</h4>
+                              <p className="text-gray-600">{project.location}</p>
+                              <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500">Area:</span>
+                                  <span className="ml-2 font-medium">{project.area} hectares</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Carbon Stored:</span>
+                                  <span className="ml-2 font-medium">{project.carbonStored} tons CO₂</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Credits Issued:</span>
+                                  <span className="ml-2 font-medium">{project.creditsIssued.toLocaleString()}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Project ID:</span>
+                                  <span className="ml-2 font-medium">{project.projectId}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => setActiveSection('mint')}
+                              disabled={!project.canMintCredits}
+                              className={`px-3 py-2 text-sm rounded-lg ${
+                                project.canMintCredits 
+                                  ? 'bg-green-600 text-white hover:bg-green-700' 
+                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              }`}
+                              title={!project.canMintCredits ? 'Project must be verified before minting credits' : 'Mint carbon credits'}
+                            >
+                              {project.canMintCredits ? 'Mint Credits' : 'Verification Required'}
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => setActiveSection('mint')}
-                            className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
-                          >
-                            Mint Credits
-                          </button>
-                        </div>
+                      </div>
+                      
+                      {/* Verification System Component */}
+                      <div className="p-6 bg-gray-50">
+                        <VerificationSystem 
+                          projectId={project.projectId}
+                          verification={project.verification}
+                          onStatusUpdate={(newStatus: VerificationStatus) => {
+                            setProjects(prev => prev.map(p => 
+                              p.projectId === project.projectId 
+                                ? { 
+                                    ...p, 
+                                    verification: { ...p.verification, status: newStatus },
+                                    canMintCredits: newStatus === 'approved'
+                                  }
+                                : p
+                            ));
+                          }}
+                        />
                       </div>
                     </div>
                   ))}

@@ -2,16 +2,23 @@
 
 import { useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { ProjectFormData, TransactionResult } from '@/types';
+import { TransactionResult } from '@/types';
+
+interface SimpleProjectFormData {
+  projectId: string;
+  name: string;
+  description: string;
+  location: string;
+}
 
 interface ProjectFormProps {
-  onSubmit: (data: ProjectFormData) => Promise<TransactionResult>;
+  onSubmit: (data: SimpleProjectFormData) => Promise<TransactionResult>;
   onCancel: () => void;
 }
 
 export default function ProjectForm({ onSubmit, onCancel }: ProjectFormProps) {
   const { connected, publicKey } = useWallet();
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [formData, setFormData] = useState<SimpleProjectFormData>({
     projectId: '',
     name: '',
     description: '',

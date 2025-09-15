@@ -1,11 +1,31 @@
 import { PublicKey } from '@solana/web3.js';
 
+export type VerificationStatus = 'pending' | 'under_review' | 'field_verification' | 'scientific_review' | 'approved' | 'rejected';
+
+export interface VerificationData {
+  status: VerificationStatus;
+  submittedAt: Date;
+  reviewedAt?: Date;
+  verifiedBy?: string;
+  verificationNotes?: string;
+  requiredDocuments: string[];
+  submittedDocuments: string[];
+  fieldVerificationDate?: Date;
+  scientificReviewDate?: Date;
+}
+
 export interface Project {
   projectId: string;
-  owner: PublicKey;
-  ipfsCid: string;
+  name: string;
+  location: string;
+  area: number;
+  carbonStored: number;
   creditsIssued: number;
+  owner: PublicKey;
   bump: number;
+  ipfsCid: string;
+  verification: VerificationData;
+  canMintCredits: boolean;
 }
 
 export interface CarbonCredit {
@@ -27,6 +47,24 @@ export interface ProjectFormData {
   name: string;
   description: string;
   location: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  area: number;
+  projectType: 'mangrove' | 'seagrass' | 'salt_marsh' | 'kelp_forest';
+  baselineData: {
+    carbonMeasurement: number;
+    measurementDate: Date;
+    measurementMethod: string;
+  };
+  landRights: 'owned' | 'permitted' | 'government_approved';
+  legalDocuments: File[];
+  photos: File[];
+  restorationPlan: string;
+  monitoringPlan: string;
+  expectedSequestration: number;
+  timeframe: number; // in years
   ipfsCid?: string;
 }
 

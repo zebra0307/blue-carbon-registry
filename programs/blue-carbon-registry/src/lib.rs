@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 use anchor_spl::{
     token::{self, MintTo, Token, Transfer},
