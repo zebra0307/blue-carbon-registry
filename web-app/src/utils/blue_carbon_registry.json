@@ -1,0 +1,306 @@
+{
+  "address": "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr",
+  "metadata": {
+    "name": "blue_carbon_registry",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "mint_credits",
+      "docs": [
+        "Mints new carbon credits (SPL tokens) to a recipient.",
+        "This instruction uses Cross-Program Invocation (CPI) to call the SPL Token Program."
+      ],
+      "discriminator": [
+        210,
+        43,
+        79,
+        176,
+        4,
+        212,
+        31,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "project",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project.owner",
+                "account": "Project"
+              },
+              {
+                "kind": "account",
+                "path": "project.project_id",
+                "account": "Project"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "project"
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project.owner",
+                "account": "Project"
+              },
+              {
+                "kind": "account",
+                "path": "project.project_id",
+                "account": "Project"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_project",
+      "docs": [
+        "Registers a new project on the blockchain.",
+        "This instruction creates a new Project account and stores the initial project data."
+      ],
+      "discriminator": [
+        130,
+        150,
+        121,
+        216,
+        183,
+        225,
+        243,
+        192
+      ],
+      "accounts": [
+        {
+          "name": "project",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  106,
+                  101,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "project_owner"
+              },
+              {
+                "kind": "arg",
+                "path": "project_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "project_owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "project_id",
+          "type": "string"
+        },
+        {
+          "name": "ipfs_cid",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "retire_credits",
+      "docs": [
+        "Retires carbon credits by transferring them to a burn account."
+      ],
+      "discriminator": [
+        0,
+        223,
+        106,
+        1,
+        228,
+        82,
+        170,
+        45
+      ],
+      "accounts": [
+        {
+          "name": "from_account",
+          "writable": true
+        },
+        {
+          "name": "retirement_account",
+          "writable": true
+        },
+        {
+          "name": "from_authority",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transfer_credits",
+      "docs": [
+        "Transfers carbon credits from one token account to another."
+      ],
+      "discriminator": [
+        193,
+        72,
+        117,
+        37,
+        181,
+        135,
+        246,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "from_account",
+          "writable": true
+        },
+        {
+          "name": "to_account",
+          "writable": true
+        },
+        {
+          "name": "from_authority",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Project",
+      "discriminator": [
+        205,
+        168,
+        189,
+        202,
+        181,
+        247,
+        142,
+        19
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "Project",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "project_id",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "ipfs_cid",
+            "type": "string"
+          },
+          {
+            "name": "credits_issued",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

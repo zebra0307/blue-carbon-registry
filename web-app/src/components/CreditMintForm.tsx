@@ -20,6 +20,7 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successResult, setSuccessResult] = useState<TransactionResult | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +45,18 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
       });
       
       if (result.success) {
-        // Reset form on success
+        // Reset form and show success
         setFormData({
           projectId,
           amount: '',
           verificationDate: '',
           verificationReport: '',
         });
+        setSuccessResult(result);
+        setError(null);
       } else {
         setError(result.error || 'Transaction failed');
+        setSuccessResult(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -128,6 +132,42 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
                 <h3 className="text-sm font-medium text-red-800">Error</h3>
                 <div className="mt-2 text-sm text-red-700">
                   {error}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {successResult && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">Success!</h3>
+                <div className="mt-2 text-sm text-green-700">
+                  {successResult.creditsIssued && (
+                    <p>Successfully minted {successResult.creditsIssued} carbon credits!</p>
+                  )}
+                  {successResult.mintAddress && (
+                    <p className="mt-1">
+                      <strong>Mint Address:</strong> {successResult.mintAddress}
+                    </p>
+                  )}
+                  {successResult.signature && (
+                    <p className="mt-1">
+                      <strong>Transaction:</strong> 
+                      <a 
+                        href={`https://explorer.solana.com/tx/${successResult.signature}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="ml-1 text-green-600 hover:text-green-500 underline"
+                      >
+                        {successResult.signature.slice(0, 8)}...{successResult.signature.slice(-8)}
+                      </a>
+                    </p>
+                  )}
+                  {successResult.message && !successResult.creditsIssued && (
+                    <p>{successResult.message}</p>
+                  )}
                 </div>
               </div>
             </div>

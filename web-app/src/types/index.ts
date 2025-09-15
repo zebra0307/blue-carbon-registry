@@ -34,6 +34,10 @@ export interface TransactionResult {
   signature?: string;
   success: boolean;
   error?: string;
+  message?: string;
+  creditsIssued?: number;
+  mintAddress?: string;
+  creditsRetired?: number;
 }
 
 export interface CreditMintData {
