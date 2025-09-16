@@ -16,7 +16,9 @@ import {
   Trash2,
   ShoppingCart,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Menu,
+  X
 } from 'lucide-react';
 import ProjectForm from '../components/ProjectForm';
 import CreditMintForm from '../components/CreditMintForm';
@@ -51,6 +53,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [activeSection, setActiveSection] = useState<SidebarSection>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     totalProjects: 3,
     creditsIssued: 36450,
@@ -206,48 +209,48 @@ export default function Dashboard() {
             </div>
 
             {/* Key Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                    <p className="text-2xl font-bold text-gray-900">15</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">15</p>
                   </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Building2 className="h-6 w-6 text-blue-600" />
+                  <div className="p-2 lg:p-3 bg-blue-100 rounded-lg">
+                    <Building2 className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Credits Issued</p>
-                    <p className="text-2xl font-bold text-gray-900">125.4K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">125.4K</p>
                   </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <Coins className="h-6 w-6 text-orange-600" />
+                  <div className="p-2 lg:p-3 bg-orange-100 rounded-lg">
+                    <Coins className="h-5 w-5 lg:h-6 lg:w-6 text-orange-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Transferred</p>
-                    <p className="text-2xl font-bold text-gray-900">42.8K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">42.8K</p>
                   </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <ArrowUpDown className="h-6 w-6 text-blue-600" />
+                  <div className="p-2 lg:p-3 bg-blue-100 rounded-lg">
+                    <ArrowUpDown className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Retired</p>
-                    <p className="text-2xl font-bold text-gray-900">28.6K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">28.6K</p>
                   </div>
-                  <div className="p-3 bg-red-100 rounded-lg">
-                    <Trash2 className="h-6 w-6 text-red-600" />
+                  <div className="p-2 lg:p-3 bg-red-100 rounded-lg">
+                    <Trash2 className="h-5 w-5 lg:h-6 lg:w-6 text-red-600" />
                   </div>
                 </div>
               </div>
@@ -776,9 +779,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Top Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 px-8 py-4 shadow-sm">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 px-4 lg:px-8 py-3 lg:py-4 shadow-sm">
         <div className="flex items-center justify-between max-w-full">
           <div className="flex items-center space-x-5">
+            {/* Mobile hamburger menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+            
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img 
@@ -788,7 +803,7 @@ export default function Dashboard() {
                 />
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h1 className="text-2xl font-black text-gray-900 tracking-tight">Blue Carbon MRV</h1>
                 <p className="text-sm font-semibold text-blue-600 tracking-wide">Sustainable Carbon Credits</p>
               </div>
@@ -796,9 +811,9 @@ export default function Dashboard() {
           </div>
           
           {/* Status and Connection Info */}
-          <div className="flex items-center space-x-4">
-            {/* Network Status */}
-            <div className="flex items-center space-x-3 px-4 py-2.5 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Network Status - Hidden on small screens */}
+            <div className="hidden md:flex items-center space-x-3 px-4 py-2.5 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
               <div className="relative">
                 <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                 <div className="absolute inset-0 w-3 h-3 bg-orange-400 rounded-full animate-ping opacity-75"></div>
@@ -806,8 +821,8 @@ export default function Dashboard() {
               <span className="text-sm font-bold text-orange-800 tracking-wide">Devnet</span>
             </div>
             
-            {/* Connection Status */}
-            <div className={`flex items-center space-x-3 px-4 py-2.5 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${
+            {/* Connection Status - Simplified on mobile */}
+            <div className={`flex items-center space-x-2 md:space-x-3 px-2 md:px-4 py-2.5 border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 ${
               connected 
                 ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-800' 
                 : 'bg-gradient-to-r from-red-50 to-red-100 border-red-200 text-red-800'
@@ -818,7 +833,7 @@ export default function Dashboard() {
                   <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-pulse opacity-75"></div>
                 )}
               </div>
-              <span className="text-sm font-bold tracking-wide">
+              <span className="text-xs md:text-sm font-bold tracking-wide">
                 {connected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
@@ -831,9 +846,114 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity" onClick={() => setMobileMenuOpen(false)}>
+          <div className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-50/95 to-white/95 backdrop-blur-xl shadow-xl transform transition-transform" onClick={(e) => e.stopPropagation()}>
+            {/* Mobile menu header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200/60 bg-white/50">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/bluecarbon3.png" 
+                  alt="Blue Carbon MRV" 
+                  className="h-8 w-8 rounded-lg shadow-sm ring-1 ring-blue-100"
+                />
+                <div>
+                  <h2 className="text-lg font-black text-gray-900 tracking-tight">Navigation</h2>
+                  <p className="text-xs font-semibold text-blue-600 tracking-wide">Blue Carbon MRV</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Mobile Navigation Items */}
+            <nav className="p-4 space-y-2 pt-6 overflow-y-auto h-full pb-20">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id;
+                const isWalletGated = item.requiresWallet;
+                const isLocked = isWalletGated && !connected;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (isLocked) {
+                        return;
+                      }
+                      setActiveSection(item.id as SidebarSection);
+                      setMobileMenuOpen(false); // Close mobile menu after selection
+                    }}
+                    className={`group relative w-full flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
+                      isLocked
+                        ? 'text-gray-400 bg-gray-50/50 border-2 border-gray-200/30 cursor-not-allowed'
+                        : isActive
+                        ? `${item.bgColor} ${item.textColor} border-2 ${item.borderColor} shadow-lg backdrop-blur-sm`
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/80 hover:shadow-md border-2 border-transparent hover:border-gray-200/50 backdrop-blur-sm'
+                    }`}
+                  >
+                    <div className={`relative p-2 rounded-xl mr-3 transition-all duration-300 ${
+                      isLocked
+                        ? 'bg-gray-100/50'
+                        : isActive 
+                        ? `bg-white shadow-lg border border-white/50`
+                        : 'bg-gray-100/80 group-hover:bg-white/90 group-hover:shadow-sm'
+                    }`}>
+                      <Icon className={`h-5 w-5 transition-all duration-300 ${
+                        isLocked
+                          ? 'text-gray-400'
+                          : isActive 
+                          ? item.iconColor
+                          : 'text-gray-500 group-hover:text-gray-700'
+                      }`} />
+                      {isActive && !isLocked && (
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent"></div>
+                      )}
+                    </div>
+                    <span className="flex-1 text-left font-black tracking-wide">{item.label}</span>
+                    
+                    {/* Show lock icon for wallet-gated items when not connected */}
+                    {isLocked && (
+                      <div className="p-1 rounded-xl bg-gray-200/50">
+                        <Lock className="h-4 w-4 text-gray-400" />
+                      </div>
+                    )}
+                    
+                    {/* Show chevron for active non-locked items */}
+                    {isActive && !isLocked && (
+                      <div className={`p-1 rounded-xl ${item.bgColor} shadow-md`}>
+                        <ChevronRight className={`h-4 w-4 ${item.iconColor}`} />
+                      </div>
+                    )}
+                    
+                    {/* Modern glass effect overlay - disabled for locked items */}
+                    {!isLocked && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    )}
+                  </button>
+                );
+              })}
+              
+              {/* Mobile menu footer */}
+              <div className="mt-6 pt-4 border-t border-gray-200/60 bg-white/30 backdrop-blur-sm rounded-xl">
+                <div className="text-center p-3">
+                  <p className="text-xs font-black text-gray-600 tracking-wide">POWERED BY SOLANA</p>
+                  <p className="text-xs font-bold text-gray-500 mt-1 tracking-wider">v1.0.0</p>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+
       <div className="flex pt-20">
-        {/* Fixed Sidebar */}
-        <div className="fixed left-0 top-20 bottom-0 w-64 bg-gradient-to-b from-gray-50/80 to-white/90 backdrop-blur-sm border-r border-gray-200/60 shadow-xl overflow-y-auto">
+        {/* Fixed Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block fixed left-0 top-20 bottom-0 w-64 bg-gradient-to-b from-gray-50/80 to-white/90 backdrop-blur-sm border-r border-gray-200/60 shadow-xl overflow-y-auto">
           <nav className="p-4 space-y-2 pt-6">{sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -910,8 +1030,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 ml-64 p-6 max-w-full overflow-hidden">
+        {/* Main Content Area - Responsive margins */}
+        <div className="flex-1 lg:ml-64 p-4 lg:p-6 max-w-full overflow-hidden">
           {!connected ? (
             <div className="text-center py-12">
               <div className="max-w-md mx-auto">
@@ -920,8 +1040,8 @@ export default function Dashboard() {
                   alt="Blue Carbon MRV" 
                   className="h-24 w-24 mx-auto mb-4 rounded-full shadow-lg"
                 />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Blue Carbon MRV</h2>
-                <p className="text-gray-600 mb-6">
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Welcome to Blue Carbon MRV</h2>
+                <p className="text-sm lg:text-base text-gray-600 mb-6">
                   Connect your wallet to start managing blue carbon projects and carbon credits on the Solana blockchain.
                 </p>
                 <WalletMultiButton />
