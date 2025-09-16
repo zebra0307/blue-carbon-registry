@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { CreditMintData, TransactionResult } from '@/types';
+import { createProjectToken, mintCarbonCredits } from '@/utils/tokenService';
 
 interface CreditMintFormProps {
   projectId: string;
@@ -21,6 +22,78 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successResult, setSuccessResult] = useState<TransactionResult | null>(null);
+  const [tokenMintAddress, setTokenMintAddress] = useState<string | null>(null);
+  const [tokenCreating, setTokenCreating] = useState(false);
+  const [tokenMinting, setTokenMinting] = useState(false);
+
+  // Create SPL Token for the project
+  const handleCreateToken = async () => {
+    if (!connected || !publicKey) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    setTokenCreating(true);
+    setError(null);
+
+    try {
+      const result = await createProjectToken(
+        { publicKey, signTransaction: (window as any).solana?.signTransaction, connected },
+        projectId
+      );
+
+      if (result.success && result.mintAddress) {
+        setTokenMintAddress(result.mintAddress.toString());
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to create token');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create token');
+    } finally {
+      setTokenCreating(false);
+    }
+  };
+
+  // Mint SPL tokens
+  const handleMintTokens = async () => {
+    if (!connected || !publicKey || !tokenMintAddress) {
+      setError('Token not created yet or wallet not connected');
+      return;
+    }
+
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    setTokenMinting(true);
+    setError(null);
+
+    try {
+      const result = await mintCarbonCredits(
+        { publicKey, signTransaction: (window as any).solana?.signTransaction, connected },
+        projectId,
+        amount * 100, // Convert to tokens with 2 decimals
+        { toString: () => tokenMintAddress } as any // Mock PublicKey interface
+      );
+
+      if (result.success) {
+        setError(null);
+        // Continue with the original form submission
+        return true;
+      } else {
+        setError(result.error || 'Failed to mint tokens');
+        return false;
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mint tokens');
+      return false;
+    } finally {
+      setTokenMinting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +112,16 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
     setError(null);
 
     try {
+      // Step 1: Mint SPL tokens if token exists
+      if (tokenMintAddress) {
+        const tokenMintSuccess = await handleMintTokens();
+        if (!tokenMintSuccess) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Step 2: Continue with original blockchain registration
       const result = await onSubmit({
         ...formData,
         amount: formData.amount,
@@ -74,6 +157,34 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Mint Carbon Credits</h2>
       <p className="text-gray-600 mb-6">Project: <span className="font-medium">{projectId}</span></p>
+      
+      {/* SPL Token Setup Section */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-semibold text-blue-900 mb-3">SPL Token Setup</h3>
+        
+        {!tokenMintAddress ? (
+          <div>
+            <p className="text-blue-800 mb-3">
+              First, create an SPL token for this project's carbon credits.
+            </p>
+            <button
+              type="button"
+              onClick={handleCreateToken}
+              disabled={tokenCreating || !connected}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {tokenCreating ? 'Creating Token...' : 'Create Carbon Credit Token'}
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="text-green-800 mb-2">✅ Token created successfully!</p>
+            <p className="text-sm text-gray-600 break-all">
+              Mint Address: <span className="font-mono">{tokenMintAddress}</span>
+            </p>
+          </div>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -177,10 +288,10 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
         <div className="flex space-x-4">
           <button
             type="submit"
-            disabled={loading || !connected}
+            disabled={loading || !connected || tokenCreating || tokenMinting}
             className="flex-1 bg-carbon-green-600 text-white py-2 px-4 rounded-md font-medium hover:bg-carbon-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Minting...' : 'Mint Credits'}
+            {loading || tokenMinting ? 'Minting...' : 'Mint Credits'}
           </button>
           <button
             type="button"
@@ -195,10 +306,15 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
         <div className="flex">
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">Information</h3>
+            <h3 className="text-sm font-medium text-blue-800">Enhanced Minting Process</h3>
             <div className="mt-2 text-sm text-blue-700">
-              Minting credits creates new carbon offset tokens based on verified environmental projects. 
-              Ensure all verification documentation is accurate and complete.
+              <p className="mb-2">This enhanced minting process includes:</p>
+              <ul className="list-disc ml-4 space-y-1">
+                <li>SPL Token creation for liquid carbon credits</li>
+                <li>Blockchain registration with verification data</li>
+                <li>Mint authority managed by program smart contract</li>
+                <li>Full traceability and transparency</li>
+              </ul>
             </div>
           </div>
         </div>

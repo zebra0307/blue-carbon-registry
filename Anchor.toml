@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 blue_carbon_registry = "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr"
 
+[programs.devnet]
+blue_carbon_registry = "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

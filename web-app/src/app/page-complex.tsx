@@ -27,7 +27,7 @@ import CreditRetireForm from '../components/CreditRetireForm';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import MarketplaceComponent from '../components/MarketplaceComponent';
 import VerificationSystem from '../components/VerificationSystem';
-import { VerificationData, VerificationStatus } from '@/types';
+import { VerificationData, VerificationStatus, TransactionResult } from '@/types';
 
 interface Project {
   projectId: string;
@@ -48,71 +48,91 @@ type SidebarSection = 'dashboard' | 'projects' | 'register' | 'mint' | 'transfer
 
 export default function Dashboard() {
   const { connection } = useConnection();
-  const { connected, publicKey } = useWallet();
+  const wallet = useWallet();
+  const { connected, publicKey } = wallet;
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [activeSection, setActiveSection] = useState<SidebarSection>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
-    totalProjects: 3,
-    creditsIssued: 36450,
-    creditsTransferred: 12450,
-    creditsRetired: 8320
+    totalProjects: 0,
+    creditsIssued: 0,
+    creditsTransferred: 0,
+    creditsRetired: 0
   });
 
   useEffect(() => {
-    // Mock data for demo
-    const mockProjects: Project[] = [
-      {
-        projectId: 'BCP-001',
-        name: 'Coastal Mangrove Restoration',
-        location: 'Queensland, Australia',
-        area: 150.5,
-        carbonStored: 2400.8,
-        creditsIssued: 12500,
-        owner: publicKey || new (require('@solana/web3.js')).PublicKey('11111111111111111111111111111111'),
-        bump: 255,
-        ipfsCid: 'QmExample1',
-        verification: {
-          status: 'approved',
-          submittedAt: new Date('2024-01-15'),
-          reviewedAt: new Date('2024-02-01'),
-          verifiedBy: 'Carbon Verification International',
-          verificationNotes: 'Project meets all verification standards. Field verification completed successfully.',
-          requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
-          submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
-          fieldVerificationDate: new Date('2024-01-25'),
-          scientificReviewDate: new Date('2024-01-30')
-        },
-        canMintCredits: true
-      },
-      {
-        projectId: 'BCP-002',
-        name: 'Seagrass Meadow Protection',
-        location: 'Florida Keys, USA',
-        area: 89.3,
-        carbonStored: 1850.2,
-        creditsIssued: 9800,
-        owner: publicKey || new (require('@solana/web3.js')).PublicKey('11111111111111111111111111111111'),
-        bump: 254,
-        ipfsCid: 'QmExample2',
-        verification: {
-          status: 'field_verification',
-          submittedAt: new Date('2024-02-10'),
-          reviewedAt: new Date('2024-02-15'),
-          verifiedBy: 'Marine Conservation Verifiers',
-          verificationNotes: 'Initial documentation approved. Field verification scheduled for next week.',
-          requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment', 'Marine Survey'],
-          submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
-          fieldVerificationDate: new Date('2024-02-20')
-        },
-        canMintCredits: false
+    const loadProjects = async () => {
+      console.log('=== LOADING PROJECTS ===');
+      console.log('Connected:', connected);
+      console.log('PublicKey:', publicKey?.toString());
+      
+      setLoading(true);
+      
+      if (!publicKey || !connected) {
+        console.log('No wallet connected or public key missing, setting empty projects');
+        // If no wallet connected, show empty projects list
+        setProjects([]);
+        setLoading(false);
+        return;
       }
-    ];
-    setProjects(mockProjects);
-    setLoading(false);
-  }, [publicKey]);
+
+      try {
+        console.log('Attempting to fetch projects for wallet:', publicKey.toString());
+        // Fetch real projects from blockchain
+        const { fetchUserProjects } = await import('../utils/projectService');
+        const result = await fetchUserProjects(publicKey, wallet);
+        
+        console.log('Fetch result:', result);
+        
+        if (result.success && result.projects) {
+          console.log('Fetched real projects from blockchain:', result.projects);
+          
+          // Transform blockchain data to match UI format
+          const transformedProjects: Project[] = result.projects.map((project: any) => ({
+            projectId: project.projectId || project.project_id, // Handle both camelCase and snake_case
+            name: project.name || `Project ${project.projectId || project.project_id}`, // Default name if not stored
+            location: project.location || 'Unknown Location', // Default location if not stored
+            area: project.area || 100, // Default area
+            carbonStored: project.carbonStored || 1000, // Default carbon stored
+            creditsIssued: project.creditsIssued || project.credits_issued || 0,
+            owner: project.owner,
+            bump: project.bump || 0,
+            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
+            verification: {
+              status: 'pending',
+              submittedAt: new Date(),
+              verificationNotes: 'Project retrieved from blockchain.',
+              requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+              submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
+            },
+            canMintCredits: true // Enable minting for blockchain projects
+          }));
+          
+          setProjects(transformedProjects);
+          
+          // Update stats based on real data
+          setStats({
+            totalProjects: transformedProjects.length,
+            creditsIssued: transformedProjects.reduce((sum, p) => sum + p.creditsIssued, 0),
+            creditsTransferred: 0, // Would need additional blockchain calls to get this
+            creditsRetired: 0, // Would need additional blockchain calls to get this
+          });
+        } else {
+          console.warn('Failed to fetch projects:', result.error);
+          setProjects([]);
+        }
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        setProjects([]);
+      }
+      
+      setLoading(false);
+    };
+
+    loadProjects();
+  }, [publicKey, connected]);
 
   // Handle wallet connection state changes
   useEffect(() => {
@@ -214,7 +234,12 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">15</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">
+                      {loading ? '...' : stats.totalProjects}
+                    </p>
+                    {!connected && (
+                      <p className="text-xs text-gray-400 mt-1">Connect wallet to view</p>
+                    )}
                   </div>
                   <div className="p-2 lg:p-3 bg-blue-100 rounded-lg">
                     <Building2 className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600" />
@@ -225,7 +250,12 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Credits Issued</p>
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">125.4K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">
+                      {loading ? '...' : stats.creditsIssued.toLocaleString()}
+                    </p>
+                    {!connected && (
+                      <p className="text-xs text-gray-400 mt-1">Connect wallet to view</p>
+                    )}
                   </div>
                   <div className="p-2 lg:p-3 bg-orange-100 rounded-lg">
                     <Coins className="h-5 w-5 lg:h-6 lg:w-6 text-orange-600" />
@@ -236,7 +266,10 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Transferred</p>
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">42.8K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">
+                      {loading ? '...' : stats.creditsTransferred.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Coming soon</p>
                   </div>
                   <div className="p-2 lg:p-3 bg-blue-100 rounded-lg">
                     <ArrowUpDown className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600" />
@@ -247,7 +280,10 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Retired</p>
-                    <p className="text-xl lg:text-2xl font-bold text-gray-900">28.6K</p>
+                    <p className="text-xl lg:text-2xl font-bold text-gray-900">
+                      {loading ? '...' : stats.creditsRetired.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Coming soon</p>
                   </div>
                   <div className="p-2 lg:p-3 bg-red-100 rounded-lg">
                     <Trash2 className="h-5 w-5 lg:h-6 lg:w-6 text-red-600" />
@@ -325,44 +361,20 @@ export default function Dashboard() {
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
                 </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <Coins className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Minted 2,500 credits</p>
-                        <p className="text-xs text-gray-500">Coastal Mangrove Project • 2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <ArrowUpDown className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Transferred 1,000 credits</p>
-                        <p className="text-xs text-gray-500">To marketplace • 5 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <TreePine className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Registered new project</p>
-                        <p className="text-xs text-gray-500">Seagrass Conservation • 1 day ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Retired 500 credits</p>
-                        <p className="text-xs text-gray-500">Offset company emissions • 2 days ago</p>
-                      </div>
-                    </div>
+                <div className="p-8 text-center">
+                  <div className="mb-4">
+                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Activity History Coming Soon</h4>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Real-time activity tracking is under development. This will show your actual 
+                      blockchain transactions including mints, transfers, and retirements.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg max-w-md mx-auto">
+                    <p className="text-sm text-blue-700">
+                      <strong>Next Update:</strong> Live transaction feed from Solana blockchain
+                    </p>
                   </div>
                 </div>
               </div>
@@ -375,27 +387,39 @@ export default function Dashboard() {
                 <div className="p-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Total Portfolio Value</span>
-                      <span className="text-lg font-bold text-gray-900">$1,782,450</span>
+                      <span className="text-sm font-medium text-gray-700">Available Credits</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {loading ? '...' : stats.creditsIssued.toLocaleString()}
+                      </span>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Available Credits</span>
-                        <span className="text-sm font-medium">54,000</span>
+                        <span className="text-sm text-gray-600">Projects Registered</span>
+                        <span className="text-sm font-medium">
+                          {connected ? stats.totalProjects : 'Connect wallet'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Average Price</span>
-                        <span className="text-sm font-medium">$14.25</span>
+                        <span className="text-sm text-gray-600">Credits Transferred</span>
+                        <span className="text-sm font-medium text-gray-400">Coming soon</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Monthly Growth</span>
-                        <span className="text-sm font-medium text-green-600">+12.5%</span>
+                        <span className="text-sm text-gray-600">Credits Retired</span>
+                        <span className="text-sm font-medium text-gray-400">Coming soon</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Total CO₂ Impact</span>
-                        <span className="text-sm font-medium">125,400 tons</span>
+                        <span className="text-sm text-gray-600">Portfolio Value</span>
+                        <span className="text-sm font-medium text-gray-400">Marketplace pricing soon</span>
                       </div>
                     </div>
+                    
+                    {!connected && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-700 text-center">
+                          Connect your wallet to view real portfolio data
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -481,70 +505,87 @@ export default function Dashboard() {
               </div>
               <div className="p-6">
                 <ProjectForm 
-                  onSubmit={async (data) => {
+                  onSubmit={async (data): Promise<TransactionResult> => {
                     try {
-                      // Import necessary modules
-                      const { Program, AnchorProvider, web3 } = await import('@coral-xyz/anchor');
+                      setLoading(true);
                       
                       if (!publicKey || !connected) {
                         throw new Error('Wallet not connected');
                       }
 
-                      // Create a project with proper verification system
-                      const newProject: Project = {
-                        projectId: data.projectId,
-                        name: data.name,
+                      // Use real blockchain registration with correct parameters
+                      const { registerProject } = await import('../utils/projectService');
+                      
+                      const result = await registerProject(wallet, {
+                        id: data.projectId,
+                        title: data.name,
+                        description: `${data.name} located at ${data.location}`,
                         location: data.location,
-                        area: Math.floor(Math.random() * 1000) + 100, // Mock area
-                        carbonStored: Math.floor(Math.random() * 10000) + 1000, // Mock carbon stored
-                        creditsIssued: 0, // New project starts with 0 credits
-                        owner: publicKey,
-                        bump: 0,
-                        ipfsCid: `QmExample${Date.now()}`, // Mock IPFS CID
-                        verification: {
-                          status: 'pending',
-                          submittedAt: new Date(),
-                          requiredDocuments: [
-                            'Project Proposal',
-                            'Land Rights Documentation',
-                            'Baseline Carbon Measurements',
-                            'Environmental Impact Assessment',
-                            'Restoration Plan',
-                            'Monitoring Protocol',
-                            'GPS Coordinates Verification',
-                            'Photographic Evidence'
-                          ],
-                          submittedDocuments: [
-                            'Project Proposal', // Assume basic form submission provides this
-                            'GPS Coordinates Verification' // Location provided
-                          ],
-                          verificationNotes: 'Initial project submission received. Awaiting document review.'
-                        },
-                        canMintCredits: false // Cannot mint until verified
-                      };
+                        carbonCredits: Math.floor(Math.random() * 1000) + 100, // Mock carbon credits for now
+                        verificationStatus: 'pending' as const,
+                        ipfsCid: `QmExample${Date.now()}`, // Mock IPFS CID for now
+                      });
 
-                      // Add to local projects list
-                      setProjects(prev => [...prev, newProject]);
-                      
-                      // Update stats
-                      setStats(prev => ({
-                        ...prev,
-                        totalProjects: prev.totalProjects + 1
-                      }));
-
-                      // Show success message with verification info
-                      alert(`Project "${data.name}" registered successfully!\n\nNext Steps:\n1. Your project is now under review\n2. Please submit required documents\n3. Verification process typically takes 7-14 days\n4. You'll be notified when verification is complete\n\nNote: Credit minting is disabled until project verification is complete.`);
-                      
-                      // Navigate back to projects view
-                      setActiveSection('projects');
-                      
-                      return { success: true };
+                      if (result.success) {
+                        alert(`Project "${data.name}" registered successfully on the blockchain!\n\nTransaction: ${result.txSignature}\n\nYour project is now permanently stored on Solana and will persist across page refreshes.`);
+                        
+                        // Refresh the projects list from blockchain
+                        const { fetchUserProjects } = await import('../utils/projectService');
+                        const fetchResult = await fetchUserProjects(publicKey, wallet);
+                        
+                        if (fetchResult.success && fetchResult.projects) {
+                          const transformedProjects: Project[] = fetchResult.projects.map((project: any) => ({
+                            projectId: project.projectId || project.project_id,
+                            name: project.name || `Project ${project.projectId || project.project_id}`,
+                            location: project.location || 'Unknown Location',
+                            area: project.area || 100,
+                            carbonStored: project.carbonStored || 1000,
+                            creditsIssued: project.creditsIssued || project.credits_issued || 0,
+                            owner: project.owner,
+                            bump: project.bump || 0,
+                            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
+                            verification: {
+                              status: 'pending',
+                              submittedAt: new Date(),
+                              verificationNotes: 'Project retrieved from blockchain.',
+                              requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+                              submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
+                            },
+                            canMintCredits: false
+                          }));
+                          
+                          setProjects(transformedProjects);
+                          
+                          // Update stats
+                          setStats(prev => ({
+                            ...prev,
+                            totalProjects: transformedProjects.length,
+                            creditsIssued: transformedProjects.reduce((sum, p) => sum + p.creditsIssued, 0),
+                          }));
+                        }
+                        
+                        // Navigate back to projects view
+                        setActiveSection('projects');
+                        
+                        return {
+                          success: true,
+                          signature: result.txSignature,
+                          message: `Project "${data.name}" registered successfully!`
+                        };
+                      } else {
+                        throw new Error(result.error || 'Failed to register project');
+                      }
                     } catch (error) {
-                      console.error('Error registering project:', error);
-                      return { 
-                        success: false, 
-                        error: error instanceof Error ? error.message : 'Failed to register project'
+                      console.error('Registration error:', error);
+                      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                      alert(`Failed to register project: ${errorMessage}`);
+                      
+                      return {
+                        success: false,
+                        error: errorMessage
                       };
+                    } finally {
+                      setLoading(false);
                     }
                   }}
                   onCancel={() => setActiveSection('dashboard')}
@@ -665,8 +706,54 @@ export default function Dashboard() {
         return (
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-purple-25">
-              <h3 className="text-2xl font-black text-purple-700 tracking-tight">My Projects</h3>
-              <p className="text-sm font-semibold text-purple-600 mt-2 tracking-wide">Manage your registered blue carbon projects</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-black text-purple-700 tracking-tight">My Projects</h3>
+                  <p className="text-sm font-semibold text-purple-600 mt-2 tracking-wide">Manage your registered blue carbon projects</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    console.log('Manual refresh clicked');
+                    if (publicKey && connected) {
+                      setLoading(true);
+                      try {
+                        const { fetchUserProjects } = await import('../utils/projectService');
+                        const result = await fetchUserProjects(publicKey, wallet);
+                        console.log('Manual refresh result:', result);
+                        if (result.success && result.projects) {
+                          const transformedProjects: Project[] = result.projects.map((project: any) => ({
+                            projectId: project.projectId || project.project_id,
+                            name: project.name || `Project ${project.projectId || project.project_id}`,
+                            location: project.location || 'Unknown Location',
+                            area: project.area || 100,
+                            carbonStored: project.carbonStored || 1000,
+                            creditsIssued: project.creditsIssued || project.credits_issued || 0,
+                            owner: project.owner,
+                            bump: project.bump || 0,
+                            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
+                            verification: {
+                              status: 'pending',
+                              submittedAt: new Date(),
+                              verificationNotes: 'Project retrieved from blockchain.',
+                              requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
+                              submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
+                            },
+                            canMintCredits: true
+                          }));
+                          setProjects(transformedProjects);
+                        }
+                      } catch (error) {
+                        console.error('Manual refresh error:', error);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  🔄 Refresh Projects
+                </button>
+              </div>
             </div>
             <div className="p-6">
               {loading ? (

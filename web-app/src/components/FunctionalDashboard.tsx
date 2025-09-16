@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { fetchUserProjects } from '@/utils/projectService';
 import FunctionalHeader from './FunctionalHeader';
 
 interface Stats {
@@ -15,11 +16,56 @@ export default function FunctionalDashboard() {
   const { connected, publicKey } = useWallet();
   const { connection } = useConnection();
   const [stats, setStats] = useState<Stats>({
-    totalProjects: 15,
-    creditsIssued: 25430,
-    creditsTransferred: 12450,
-    creditsRetired: 8320
+    totalProjects: 0,
+    creditsIssued: 0,
+    creditsTransferred: 0,
+    creditsRetired: 0
   });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data from blockchain
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!connected || !publicKey) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const wallet = { publicKey, connected };
+        const projects = await fetchUserProjects(publicKey, wallet);
+        
+        if (projects.success && projects.projects) {
+          // Calculate real stats from blockchain data
+          const totalProjects = projects.projects.length;
+          let creditsIssued = 0;
+          let creditsTransferred = 0;
+          let creditsRetired = 0;
+
+          projects.projects.forEach((project: any) => {
+            // Sum up credits from each project
+            creditsIssued += project.carbonCredits || 0;
+            // Note: Transfer and retirement data would come from transaction history
+            // For now, we'll show 0 until transaction tracking is implemented
+          });
+
+          setStats({
+            totalProjects,
+            creditsIssued,
+            creditsTransferred: 0, // To be implemented with transaction history
+            creditsRetired: 0      // To be implemented with transaction history
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [connected, publicKey]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,20 +85,36 @@ export default function FunctionalDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-            <div className="text-2xl font-bold text-gray-900">{stats.totalProjects}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {loading ? '...' : stats.totalProjects}
+            </div>
             <div className="text-gray-600">Total Projects</div>
+            {!connected && (
+              <div className="text-xs text-gray-400 mt-1">Connect wallet to view</div>
+            )}
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-            <div className="text-2xl font-bold text-green-600">{stats.creditsIssued.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {loading ? '...' : stats.creditsIssued.toLocaleString()}
+            </div>
             <div className="text-gray-600">Credits Issued</div>
+            {!connected && (
+              <div className="text-xs text-gray-400 mt-1">Connect wallet to view</div>
+            )}
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-            <div className="text-2xl font-bold text-blue-600">{stats.creditsTransferred.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {loading ? '...' : stats.creditsTransferred.toLocaleString()}
+            </div>
             <div className="text-gray-600">Credits Transferred</div>
+            <div className="text-xs text-gray-400 mt-1">Coming soon</div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
-            <div className="text-2xl font-bold text-purple-600">{stats.creditsRetired.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {loading ? '...' : stats.creditsRetired.toLocaleString()}
+            </div>
             <div className="text-gray-600">Credits Retired</div>
+            <div className="text-xs text-gray-400 mt-1">Coming soon</div>
           </div>
         </div>
 

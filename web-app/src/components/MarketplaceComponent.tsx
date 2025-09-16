@@ -32,66 +32,30 @@ interface MarketListing {
 }
 
 export default function MarketplaceComponent() {
-  const { publicKey } = useWallet();
+  const { publicKey, connected } = useWallet();
   
+  // Real listings will be fetched from blockchain/marketplace in future updates
   const [listings] = useState<MarketListing[]>([
+    // Empty for now - will be populated with real marketplace data
+    // Commented out dummy data for reference:
+    /* 
     {
       id: '1',
-      projectName: 'Coastal Mangrove Restoration',
+      projectName: 'Example Project',
       projectId: 'BCP-001',
-      seller: 'EcoRestore Foundation',
+      seller: 'Example Seller',
       sellerRating: 4.8,
       price: 14.25,
       quantity: 5000,
-      location: 'Queensland, Australia',
+      location: 'Example Location',
       vintage: '2024',
       certification: 'Verra VCS',
       verified: true,
-      description: 'High-quality blue carbon credits from verified mangrove restoration project.',
-    },
-    {
-      id: '2',
-      projectName: 'Seagrass Meadows Protection',
-      projectId: 'BCP-002',
-      seller: 'Blue Ocean Initiative',
-      sellerRating: 4.6,
-      price: 12.80,
-      quantity: 2500,
-      location: 'Florida Keys, USA',
-      vintage: '2024',
-      certification: 'Gold Standard',
-      verified: true,
-      description: 'Premium seagrass carbon credits with immediate delivery.',
-    },
-    {
-      id: '3',
-      projectName: 'Tidal Marsh Conservation',
-      projectId: 'BCP-003',
-      seller: 'Coastal Carbon Co.',
-      sellerRating: 4.4,
-      price: 11.50,
-      quantity: 3800,
-      location: 'Bay of Bengal, India',
-      vintage: '2023',
-      certification: 'Climate Action Reserve',
-      verified: true,
-      description: 'Bulk tidal marsh carbon credits available for corporate buyers.',
-    },
-    {
-      id: '4',
-      projectName: 'Kelp Forest Restoration',
-      projectId: 'BCP-004',
-      seller: 'Pacific Blue Carbon',
-      sellerRating: 4.9,
-      price: 16.75,
-      quantity: 1200,
-      location: 'California, USA',
-      vintage: '2024',
-      certification: 'Verra VCS',
-      verified: true,
-      description: 'Premium kelp forest carbon credits with enhanced biodiversity benefits.',
-    },
+      description: 'Example description',
+    }
+    */
   ]);
+  const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     minPrice: '',
@@ -150,6 +114,22 @@ export default function MarketplaceComponent() {
 
   return (
     <div className="space-y-6">
+      {/* Development Notice */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-blue-800">Marketplace in Development</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              The carbon credit marketplace is being built with real blockchain integration. 
+              Current functionality includes project registration and credit minting via the dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-pink-25">
@@ -161,12 +141,20 @@ export default function MarketplaceComponent() {
               </p>
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 text-sm font-semibold transition-colors">
+              <button 
+                className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed text-sm font-semibold"
+                disabled
+                title="Coming soon"
+              >
                 <ShoppingCart className="h-4 w-4 inline mr-1" />
-                My Orders
+                My Orders (Coming Soon)
               </button>
-              <button className="px-4 py-2 border border-pink-600 text-pink-600 rounded-lg hover:bg-pink-50 text-sm font-semibold transition-colors">
-                List Credits
+              <button 
+                className="px-4 py-2 border border-gray-400 text-gray-400 rounded-lg cursor-not-allowed text-sm font-semibold"
+                disabled
+                title="Coming soon"
+              >
+                List Credits (Coming Soon)
               </button>
             </div>
           </div>
@@ -334,8 +322,22 @@ export default function MarketplaceComponent() {
       {filteredListings.length === 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
           <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No listings found</h3>
-          <p className="text-gray-600">Try adjusting your search criteria or filters</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Marketplace Coming Soon</h3>
+          <p className="text-gray-600 mb-4">
+            The carbon credit marketplace is currently in development. 
+            Soon you'll be able to buy and sell verified blue carbon credits.
+          </p>
+          <div className="bg-blue-50 rounded-lg p-4 mt-4">
+            <p className="text-sm text-blue-800">
+              <strong>What's Coming:</strong>
+            </p>
+            <ul className="text-sm text-blue-700 mt-2 text-left max-w-md mx-auto">
+              <li>• Peer-to-peer credit trading</li>
+              <li>• Escrow-based secure transactions</li>
+              <li>• Real-time price discovery</li>
+              <li>• Verified project listings</li>
+            </ul>
+          </div>
         </div>
       )}
 

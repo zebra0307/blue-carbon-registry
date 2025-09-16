@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { fetchUserProjects } from '@/utils/projectService';
 import { 
   TrendingUp, 
   Coins, 
@@ -15,7 +16,7 @@ import {
   DollarSign
 } from 'lucide-react';
 
-// Mock data for analytics
+// Real analytics data interface
 interface AnalyticsData {
   totalCreditsIssued: number;
   totalCreditsRetired: number;
@@ -36,24 +37,70 @@ interface ChartData {
 
 export default function AnalyticsDashboard() {
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
+  const { publicKey, connected } = useWallet();
   
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    totalCreditsIssued: 234500,
-    totalCreditsRetired: 89200,
-    totalProjects: 47,
-    activeProjects: 42,
-    avgCreditPrice: 14.25,
-    totalTransactions: 1256,
-    carbonImpact: 89200,
-    monthlyGrowth: 12.5
+    totalCreditsIssued: 0,
+    totalCreditsRetired: 0,
+    totalProjects: 0,
+    activeProjects: 0,
+    avgCreditPrice: 0,
+    totalTransactions: 0,
+    carbonImpact: 0,
+    monthlyGrowth: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState('6months');
+
+  // Fetch real analytics data from blockchain
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      if (!connected || !publicKey) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const wallet = { publicKey, connected };
+        const projects = await fetchUserProjects(publicKey, wallet);
+        
+        if (projects.success && projects.projects) {
+          // Calculate real analytics from blockchain data
+          const totalProjects = projects.projects.length;
+          const activeProjects = projects.projects.filter((p: any) => p.isActive).length;
+          let totalCreditsIssued = 0;
+
+          projects.projects.forEach((project: any) => {
+            totalCreditsIssued += project.carbonCredits || 0;
+          });
+
+          setAnalyticsData({
+            totalCreditsIssued,
+            totalCreditsRetired: 0, // To be implemented with transaction history
+            totalProjects,
+            activeProjects,
+            avgCreditPrice: 0, // To be implemented with marketplace data
+            totalTransactions: 0, // To be implemented with transaction history
+            carbonImpact: totalCreditsIssued, // Assuming 1:1 ratio for now
+            monthlyGrowth: 0 // To be calculated with historical data
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching analytics data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, [connected, publicKey, timeframe]);
 
   // Export functionality
   const exportAnalyticsReport = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     
-    // Prepare CSV data
+    // Prepare CSV data with real analytics
     const reportData = [
       ['Blue Carbon Registry Analytics Report'],
       [`Generated: ${new Date().toLocaleString()}`],
@@ -61,55 +108,18 @@ export default function AnalyticsDashboard() {
       [`Wallet: ${publicKey?.toString() || 'Not Connected'}`],
       [''],
       ['SUMMARY METRICS'],
-      ['Metric', 'Value', 'Change'],
-      ['Total Credits Issued', analyticsData.totalCreditsIssued.toLocaleString(), `+${analyticsData.monthlyGrowth}%`],
-      ['Total Credits Retired', analyticsData.totalCreditsRetired.toLocaleString(), '+8.3%'],
+      ['Metric', 'Value', 'Status'],
+      ['Total Credits Issued', analyticsData.totalCreditsIssued.toLocaleString(), 'Live Data'],
+      ['Total Credits Retired', analyticsData.totalCreditsRetired.toLocaleString(), 'Coming Soon'],
       ['Active Projects', analyticsData.activeProjects.toString(), `${analyticsData.totalProjects} total`],
-      ['Average Credit Price', `$${analyticsData.avgCreditPrice}`, '+2.1%'],
-      ['Total Transactions', analyticsData.totalTransactions.toLocaleString(), '+15.7%'],
-      ['Carbon Impact (tonnes CO₂)', analyticsData.carbonImpact.toLocaleString(), '+8.3%'],
+      ['Average Credit Price', `$${analyticsData.avgCreditPrice}`, 'Coming Soon'],
+      ['Total Transactions', analyticsData.totalTransactions.toLocaleString(), 'Coming Soon'],
+      ['Carbon Impact (tonnes CO₂)', analyticsData.carbonImpact.toLocaleString(), 'Live Data'],
       [''],
-      ['MONTHLY CREDIT FLOW'],
-      ['Month', 'Credits Issued', 'Credits Retired', 'Credits Traded'],
-      ...chartData.map(data => [data.month, data.issued.toString(), data.retired.toString(), data.traded.toString()]),
-      [''],
-      ['TOP PERFORMING PROJECTS'],
-      ['Project Name', 'Location', 'Credits Generated', 'Growth Rate'],
-      ['Great Barrier Reef Seagrass', 'Australia', '12,500', '+15%'],
-      ['Sundarbans Mangrove Protection', 'Bangladesh', '11,800', '+12%'],
-      ['California Kelp Restoration', 'USA', '9,200', '+8%'],
-      ['North Sea Salt Marsh', 'Netherlands', '7,500', '+6%'],
-      [''],
-      ['RECENT TRANSACTIONS'],
-      ['Type', 'Amount', 'Project', 'User', 'Time'],
-      ['Mint', '2,500', 'Mangrove Restoration', 'EcoRestore Foundation', '2 hours ago'],
-      ['Transfer', '1,200', 'Seagrass Protection', 'Blue Ocean Initiative', '4 hours ago'],
-      ['Retire', '800', 'Coastal Wetlands', 'GreenTech Corp', '6 hours ago'],
-      ['Mint', '3,200', 'Blue Carbon Initiative', 'Marine Conservation Society', '8 hours ago'],
-      ['Transfer', '1,500', 'Ocean Carbon Storage', 'Carbon Solutions Ltd', '12 hours ago'],
-      [''],
-      ['GEOGRAPHIC DISTRIBUTION'],
-      ['Region', 'Projects', 'Percentage'],
-      ['Asia-Pacific', '24', '36%'],
-      ['North America', '18', '27%'],
-      ['Europe', '12', '18%'],
-      ['Latin America', '8', '12%'],
-      ['Africa', '5', '7%'],
-      [''],
-      ['ENVIRONMENTAL IMPACT BREAKDOWN'],
-      ['Project Type', 'CO₂ Sequestered (tonnes)'],
-      ['Mangrove Projects', '45,600'],
-      ['Seagrass Restoration', '28,900'],
-      ['Salt Marsh Conservation', '14,700'],
-      [''],
-      ['MARKET ANALYTICS'],
-      ['Metric', 'Value', 'Trend'],
-      ['Average Price', '$14.25', 'Up 2.1%'],
-      ['Highest Price (30d)', '$18.50', '-'],
-      ['Lowest Price (30d)', '$11.80', '-'],
-      ['Market Volatility', 'Low', 'Stable'],
-      ['Market Volume', '$5.2M', 'Up 15.7%'],
-      ['Active Traders', '1,249', 'Up 8.9%'],
+      ['NOTES'],
+      ['This report shows real blockchain data where available.'],
+      ['Some metrics are marked "Coming Soon" and will be implemented with transaction history tracking.'],
+      ['Connect your wallet to view personalized analytics.'],
     ];
 
     // Convert to CSV format
@@ -135,16 +145,11 @@ export default function AnalyticsDashboard() {
     }
   };
 
+  // Chart data - will be populated with real data in future updates
   const [chartData] = useState<ChartData[]>([
-    { month: 'Jan', issued: 15000, retired: 8000, traded: 12000 },
-    { month: 'Feb', issued: 18000, retired: 9500, traded: 14000 },
-    { month: 'Mar', issued: 22000, retired: 11000, traded: 16000 },
-    { month: 'Apr', issued: 25000, retired: 12500, traded: 18000 },
-    { month: 'May', issued: 28000, retired: 14000, traded: 20000 },
-    { month: 'Jun', issued: 32000, retired: 16000, traded: 22000 },
+    // Empty for now - will be populated with real blockchain transaction data
+    { month: 'Current', issued: analyticsData.totalCreditsIssued, retired: analyticsData.totalCreditsRetired, traded: 0 },
   ]);
-
-  const [timeframe, setTimeframe] = useState('6months');
 
   return (
     <div className="space-y-6">
@@ -186,8 +191,12 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Credits Issued</p>
-              <p className="text-2xl font-bold text-gray-900">{analyticsData.totalCreditsIssued.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">+{analyticsData.monthlyGrowth}% from last month</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : analyticsData.totalCreditsIssued.toLocaleString()}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                {connected ? 'Live blockchain data' : 'Connect wallet to view'}
+              </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <Coins className="h-6 w-6 text-orange-600" />
@@ -199,8 +208,10 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Credits Retired</p>
-              <p className="text-2xl font-bold text-gray-900">{analyticsData.totalCreditsRetired.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">+8.3% from last month</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : analyticsData.totalCreditsRetired.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">Coming soon</p>
             </div>
             <div className="p-3 bg-red-100 rounded-lg">
               <Flame className="h-6 w-6 text-red-600" />
@@ -212,8 +223,12 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Projects</p>
-              <p className="text-2xl font-bold text-gray-900">{analyticsData.activeProjects}</p>
-              <p className="text-sm text-blue-600 mt-1">out of {analyticsData.totalProjects} total</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : analyticsData.activeProjects}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                {connected ? `out of ${analyticsData.totalProjects} total` : 'Connect wallet to view'}
+              </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <TreePine className="h-6 w-6 text-blue-600" />
@@ -225,8 +240,10 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Avg. Credit Price</p>
-              <p className="text-2xl font-bold text-gray-900">${analyticsData.avgCreditPrice}</p>
-              <p className="text-sm text-green-600 mt-1">+2.1% from last month</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${loading ? '...' : analyticsData.avgCreditPrice.toFixed(2)}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">Marketplace coming soon</p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -300,32 +317,21 @@ export default function AnalyticsDashboard() {
               <div className="text-4xl font-bold text-green-600 mb-2">
                 {analyticsData.carbonImpact.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">tonnes CO₂ offset</div>
+              <div className="text-sm text-gray-600">tonnes CO₂ offset potential</div>
+              <div className="text-xs text-blue-600 mt-1">
+                {connected ? 'Based on registered projects' : 'Connect wallet to view impact'}
+              </div>
             </div>
             
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center">
-                  <TreePine className="h-5 w-5 text-green-600 mr-2" />
-                  <span className="text-sm font-medium">Forest Carbon</span>
-                </div>
-                <span className="text-sm font-bold">45,600 tonnes</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center">
-                  <Activity className="h-5 w-5 text-blue-600 mr-2" />
-                  <span className="text-sm font-medium">Ocean Carbon</span>
-                </div>
-                <span className="text-sm font-bold">28,900 tonnes</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                <div className="flex items-center">
-                  <BarChart3 className="h-5 w-5 text-purple-600 mr-2" />
-                  <span className="text-sm font-medium">Soil Carbon</span>
-                </div>
-                <span className="text-sm font-bold">14,700 tonnes</span>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <TreePine className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">
+                  Detailed impact breakdown coming soon
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Will categorize by ecosystem type and project phase
+                </p>
               </div>
             </div>
           </div>
@@ -338,44 +344,22 @@ export default function AnalyticsDashboard() {
           <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
           <p className="text-sm text-gray-600">Latest carbon credit activities</p>
         </div>
-        <div className="divide-y divide-gray-200">
-          {[
-            { type: 'mint', amount: 2500, project: 'Mangrove Restoration', time: '2 hours ago', user: 'D1...8Fz' },
-            { type: 'transfer', amount: 1200, project: 'Seagrass Protection', time: '4 hours ago', user: 'Ax...P9k' },
-            { type: 'retire', amount: 800, project: 'Coastal Wetlands', time: '6 hours ago', user: 'G3...7Rt' },
-            { type: 'mint', amount: 3200, project: 'Blue Carbon Initiative', time: '8 hours ago', user: 'K9...2Mf' },
-            { type: 'transfer', amount: 1500, project: 'Ocean Carbon Storage', time: '12 hours ago', user: 'R7...6Qx' },
-          ].map((tx, index) => (
-            <div key={index} className="p-4 flex items-center justify-between hover:bg-gray-50">
-              <div className="flex items-center">
-                <div className={`p-2 rounded-lg mr-4 ${
-                  tx.type === 'mint' ? 'bg-green-100' :
-                  tx.type === 'transfer' ? 'bg-blue-100' : 'bg-red-100'
-                }`}>
-                  {tx.type === 'mint' ? (
-                    <Coins className={`h-5 w-5 ${
-                      tx.type === 'mint' ? 'text-green-600' :
-                      tx.type === 'transfer' ? 'text-blue-600' : 'text-red-600'
-                    }`} />
-                  ) : tx.type === 'transfer' ? (
-                    <ArrowUpDown className="h-5 w-5 text-blue-600" />
-                  ) : (
-                    <Flame className="h-5 w-5 text-red-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {tx.type === 'mint' ? 'Minted' : tx.type === 'transfer' ? 'Transferred' : 'Retired'}{' '}
-                    {tx.amount.toLocaleString()} credits
-                  </p>
-                  <p className="text-xs text-gray-600">{tx.project} • {tx.user}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600">{tx.time}</p>
-              </div>
-            </div>
-          ))}
+        <div className="p-8 text-center">
+          <div className="mb-4">
+            <Activity className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Transaction History Coming Soon</h4>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Real-time transaction tracking is under development. This will show actual mint, transfer, 
+              and retirement activities from the Solana blockchain.
+            </p>
+          </div>
+          
+          <div className="bg-blue-50 p-4 rounded-lg mt-4 max-w-md mx-auto">
+            <p className="text-sm text-blue-700">
+              <strong>Next Update:</strong> Integration with Solana transaction history API 
+              to display real credit activities
+            </p>
+          </div>
         </div>
       </div>
     </div>
