@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "name": "blue-carbon-registry",
+  "builds": [
+    {
+      "src": "web-app/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "projectSettings": {
+          "buildCommand": "npm run build",
+          "outputDirectory": ".next"
+        }
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "web-app/$1"
+    }
+  ],
+  "installCommand": "cd web-app && npm install",
+  "buildCommand": "cd web-app && npm run build",
+  "outputDirectory": "web-app/.next",
+  "framework": "nextjs",
+  "functions": {
+    "web-app/src/app/**": {
+      "memory": 3008
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SOLANA_NETWORK": "devnet",
+    "NEXT_PUBLIC_RPC_ENDPOINT": "https://api.devnet.solana.com"
+  }
+}
