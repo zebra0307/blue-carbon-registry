@@ -53,7 +53,20 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [activeSection, setActiveSection] = useState<SidebarSection>('dashboard');
+  
+  // Initialize activeSection with localStorage value or default to dashboard
+  const [activeSection, setActiveSection] = useState<SidebarSection>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('blueCarbon_activeSection');
+      if (saved && ['dashboard', 'projects', 'register', 'mint', 'transfer', 'retire', 'marketplace', 'analytics'].includes(saved)) {
+        console.log('Initializing with saved section:', saved);
+        return saved as SidebarSection;
+      }
+    }
+    console.log('Initializing with default section: dashboard');
+    return 'dashboard';
+  });
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({
     totalProjects: 0,
@@ -61,6 +74,25 @@ export default function Dashboard() {
     creditsTransferred: 0,
     creditsRetired: 0
   });
+
+  // Save active section to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('blueCarbon_activeSection', activeSection);
+      console.log('Saved navigation state:', activeSection);
+    }
+  }, [activeSection]);
+
+  // Handle wallet disconnection for wallet-gated sections
+  useEffect(() => {
+    const walletGatedSections = ['register', 'mint', 'transfer', 'retire'];
+    
+    // If wallet disconnects and user is on a wallet-gated section, redirect to dashboard
+    if (!connected && walletGatedSections.includes(activeSection)) {
+      console.log('Wallet disconnected, redirecting from wallet-gated section:', activeSection);
+      setActiveSection('dashboard');
+    }
+  }, [connected, activeSection]);
 
   useEffect(() => {
     const loadProjects = async () => {
