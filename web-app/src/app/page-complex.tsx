@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PublicKey } from '@solana/web3.js';
 import { 
   TreePine, 
   Users, 
@@ -25,9 +26,11 @@ import CreditMintForm from '../components/CreditMintForm';
 import CreditTransferForm from '../components/CreditTransferForm';
 import CreditRetireForm from '../components/CreditRetireForm';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import TokenEconomicsDashboard from '../components/TokenEconomicsDashboard';
 import MarketplaceComponent from '../components/MarketplaceComponent';
 import VerificationSystem from '../components/VerificationSystem';
 import { VerificationData, VerificationStatus, TransactionResult } from '@/types';
+import { initializeSolana, registerProjectEnhanced } from '../utils/solana';
 
 interface Project {
   projectId: string;
@@ -44,7 +47,7 @@ interface Project {
 }
 
 type ModalType = 'register' | 'mint' | 'transfer' | 'retire' | null;
-type SidebarSection = 'dashboard' | 'projects' | 'register' | 'mint' | 'transfer' | 'retire' | 'marketplace' | 'analytics';
+type SidebarSection = 'dashboard' | 'projects' | 'register' | 'mint' | 'transfer' | 'retire' | 'marketplace' | 'analytics' | 'economics';
 
 export default function Dashboard() {
   const { connection } = useConnection();
@@ -58,12 +61,10 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState<SidebarSection>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('blueCarbon_activeSection');
-      if (saved && ['dashboard', 'projects', 'register', 'mint', 'transfer', 'retire', 'marketplace', 'analytics'].includes(saved)) {
-        console.log('Initializing with saved section:', saved);
+      if (saved && ['dashboard', 'projects', 'register', 'mint', 'transfer', 'retire', 'marketplace', 'analytics', 'economics'].includes(saved)) {
         return saved as SidebarSection;
       }
     }
-    console.log('Initializing with default section: dashboard');
     return 'dashboard';
   });
   
@@ -79,7 +80,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('blueCarbon_activeSection', activeSection);
-      console.log('Saved navigation state:', activeSection);
     }
   }, [activeSection]);
 
@@ -89,80 +89,127 @@ export default function Dashboard() {
     
     // If wallet disconnects and user is on a wallet-gated section, redirect to dashboard
     if (!connected && walletGatedSections.includes(activeSection)) {
-      console.log('Wallet disconnected, redirecting from wallet-gated section:', activeSection);
       setActiveSection('dashboard');
     }
   }, [connected, activeSection]);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      console.log('=== LOADING PROJECTS ===');
-      console.log('Connected:', connected);
-      console.log('PublicKey:', publicKey?.toString());
+  // Define loadProjects function outside useEffect so it can be called from registration
+  const loadProjects = async () => {
+    setLoading(true);
+    
+    if (!publicKey || !connected) {
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Initialize solana connection and program
+      const { connection, program } = initializeSolana(wallet);
       
-      setLoading(true);
-      
-      if (!publicKey || !connected) {
-        console.log('No wallet connected or public key missing, setting empty projects');
-        // If no wallet connected, show empty projects list
+      if (!program) {
+        console.error('Failed to initialize program');
         setProjects([]);
         setLoading(false);
         return;
       }
 
-      try {
-        console.log('Attempting to fetch projects for wallet:', publicKey.toString());
-        // Fetch real projects from blockchain
-        const { fetchUserProjects } = await import('../utils/projectService');
-        const result = await fetchUserProjects(publicKey, wallet);
+      // Fetch all Project accounts using direct connection approach
+      const PROGRAM_ID = new PublicKey('GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr');
+      const rawAccounts = await connection.getProgramAccounts(PROGRAM_ID);
+      
+      // Parse accounts to extract project data
+      const allProjects = [];
+      for (let i = 0; i < rawAccounts.length; i++) {
+        const account = rawAccounts[i];
+        const data = account.account.data;
         
-        console.log('Fetch result:', result);
-        
-        if (result.success && result.projects) {
-          console.log('Fetched real projects from blockchain:', result.projects);
+        try {
+          // Skip the 8-byte discriminator
+          let offset = 8;
           
-          // Transform blockchain data to match UI format
-          const transformedProjects: Project[] = result.projects.map((project: any) => ({
-            projectId: project.projectId || project.project_id, // Handle both camelCase and snake_case
-            name: project.name || `Project ${project.projectId || project.project_id}`, // Default name if not stored
-            location: project.location || 'Unknown Location', // Default location if not stored
-            area: project.area || 100, // Default area
-            carbonStored: project.carbonStored || 1000, // Default carbon stored
-            creditsIssued: project.creditsIssued || project.credits_issued || 0,
+          // Read project_id (string)
+          const projectIdLength = data.readUInt32LE(offset);
+          offset += 4;
+          
+          if (projectIdLength > 0 && projectIdLength < 100) {
+            const projectId = data.toString('utf8', offset, offset + projectIdLength);
+            offset += projectIdLength;
+            
+            // Read owner (32 bytes)
+            const ownerBytes = data.slice(offset, offset + 32);
+            const owner = new PublicKey(ownerBytes);
+            
+            // Add to projects array
+            allProjects.push({
+              publicKey: account.pubkey,
+              account: {
+                project_id: projectId,
+                owner: owner
+              }
+            });
+          }
+        } catch (parseError) {
+          console.warn(`Failed to parse account ${i}:`, parseError);
+        }
+      }
+      
+      // Filter projects by owner
+      const userProjects = allProjects.filter((projectAccount: any) => {
+        const projectOwner = projectAccount.account.owner.toString();
+        const targetOwner = publicKey.toString();
+        return projectOwner === targetOwner;
+      });
+
+      console.log('User projects found:', userProjects.length);
+      
+      if (userProjects.length > 0) {
+        // Transform blockchain data to match UI format
+        const transformedProjects: Project[] = userProjects.map((projectAccount: any) => {
+          const project = projectAccount.account;
+          return {
+            projectId: project.project_id,
+            name: `Blue Carbon Project ${project.project_id}`,
+            location: 'Coastal Area', // Default since not stored on chain
+            area: 100, // Default since not stored on chain
+            carbonStored: Number(project.carbon_tons_estimated || 0),
+            creditsIssued: Number(project.carbon_tons_verified || 0),
             owner: project.owner,
-            bump: project.bump || 0,
-            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
+            bump: 0,
+            ipfsCid: project.ipfs_cid || '',
             verification: {
-              status: 'pending',
+              status: project.verification_status?.verified ? 'approved' : 'pending',
               submittedAt: new Date(),
               verificationNotes: 'Project retrieved from blockchain.',
               requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
               submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
             },
-            canMintCredits: true // Enable minting for blockchain projects
-          }));
-          
-          setProjects(transformedProjects);
-          
-          // Update stats based on real data
-          setStats({
-            totalProjects: transformedProjects.length,
-            creditsIssued: transformedProjects.reduce((sum, p) => sum + p.creditsIssued, 0),
-            creditsTransferred: 0, // Would need additional blockchain calls to get this
-            creditsRetired: 0, // Would need additional blockchain calls to get this
-          });
-        } else {
-          console.warn('Failed to fetch projects:', result.error);
-          setProjects([]);
-        }
-      } catch (error) {
-        console.error('Error loading projects:', error);
+            canMintCredits: project.verification_status?.verified || false
+          };
+        });
+        
+        setProjects(transformedProjects);
+        
+        // Update stats based on real data
+        setStats({
+          totalProjects: transformedProjects.length,
+          creditsIssued: transformedProjects.reduce((sum, p) => sum + p.creditsIssued, 0),
+          creditsTransferred: 0,
+          creditsRetired: 0,
+        });
+        
+      } else {
         setProjects([]);
       }
-      
-      setLoading(false);
-    };
+    } catch (error: any) {
+      console.error('Failed to load projects:', error);
+      setProjects([]);
+    }
+    
+    setLoading(false);
+  };
 
+  useEffect(() => {
     loadProjects();
   }, [publicKey, connected]);
 
@@ -185,7 +232,8 @@ export default function Dashboard() {
     { id: 'transfer', label: 'Transfer Credits', icon: ArrowUpDown, color: 'indigo', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700', iconColor: 'text-indigo-600', borderColor: 'border-indigo-200', requiresWallet: true },
     { id: 'retire', label: 'Retire Credits', icon: Trash2, color: 'red', bgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600', borderColor: 'border-red-200', requiresWallet: true },
     { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, color: 'pink', bgColor: 'bg-pink-50', textColor: 'text-pink-700', iconColor: 'text-pink-600', borderColor: 'border-pink-200', requiresWallet: false },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200', requiresWallet: false }
+    { id: 'economics', label: 'Token Economics', icon: TrendingUp, color: 'teal', bgColor: 'bg-teal-50', textColor: 'text-teal-700', iconColor: 'text-teal-600', borderColor: 'border-teal-200', requiresWallet: false },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'emerald', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', iconColor: 'text-emerald-600', borderColor: 'border-emerald-200', requiresWallet: false }
   ];
 
   // Helper component for wallet-gated content
@@ -545,67 +593,26 @@ export default function Dashboard() {
                         throw new Error('Wallet not connected');
                       }
 
-                      // Use real blockchain registration with correct parameters
-                      const { registerProject } = await import('../utils/projectService');
+                      // Use the enhanced register project function from solana utils
+                      const carbonTonsEstimated = Math.floor(Math.random() * 1000) + 100; // Random estimate
+                      const ipfsCid = `QmExample${Date.now()}`; // Mock IPFS CID
                       
-                      const result = await registerProject(wallet, {
-                        id: data.projectId,
-                        title: data.name,
-                        description: `${data.name} located at ${data.location}`,
-                        location: data.location,
-                        carbonCredits: Math.floor(Math.random() * 1000) + 100, // Mock carbon credits for now
-                        verificationStatus: 'pending' as const,
-                        ipfsCid: `QmExample${Date.now()}`, // Mock IPFS CID for now
-                      });
+                      const result = await registerProjectEnhanced(
+                        wallet,
+                        data.projectId,
+                        ipfsCid,
+                        carbonTonsEstimated
+                      );
 
                       if (result.success) {
-                        alert(`Project "${data.name}" registered successfully on the blockchain!\n\nTransaction: ${result.txSignature}\n\nYour project is now permanently stored on Solana and will persist across page refreshes.`);
+                        alert(`Project "${data.name}" registered successfully on the blockchain!\n\nTransaction: ${result.transaction}\nProject PDA: ${result.projectPDA}\n\nYour project is now permanently stored on Solana and will appear in your projects list.`);
                         
-                        // Refresh the projects list from blockchain
-                        const { fetchUserProjects } = await import('../utils/projectService');
-                        const fetchResult = await fetchUserProjects(publicKey, wallet);
+                        // Reload projects to show the new one
+                        await loadProjects();
                         
-                        if (fetchResult.success && fetchResult.projects) {
-                          const transformedProjects: Project[] = fetchResult.projects.map((project: any) => ({
-                            projectId: project.projectId || project.project_id,
-                            name: project.name || `Project ${project.projectId || project.project_id}`,
-                            location: project.location || 'Unknown Location',
-                            area: project.area || 100,
-                            carbonStored: project.carbonStored || 1000,
-                            creditsIssued: project.creditsIssued || project.credits_issued || 0,
-                            owner: project.owner,
-                            bump: project.bump || 0,
-                            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
-                            verification: {
-                              status: 'pending',
-                              submittedAt: new Date(),
-                              verificationNotes: 'Project retrieved from blockchain.',
-                              requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
-                              submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
-                            },
-                            canMintCredits: false
-                          }));
-                          
-                          setProjects(transformedProjects);
-                          
-                          // Update stats
-                          setStats(prev => ({
-                            ...prev,
-                            totalProjects: transformedProjects.length,
-                            creditsIssued: transformedProjects.reduce((sum, p) => sum + p.creditsIssued, 0),
-                          }));
-                        }
-                        
-                        // Navigate back to projects view
-                        setActiveSection('projects');
-                        
-                        return {
-                          success: true,
-                          signature: result.txSignature,
-                          message: `Project "${data.name}" registered successfully!`
-                        };
+                        return { success: true, signature: result.transaction };
                       } else {
-                        throw new Error(result.error || 'Failed to register project');
+                        throw new Error('Failed to register project');
                       }
                     } catch (error) {
                       console.error('Registration error:', error);
@@ -745,40 +752,10 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={async () => {
-                    console.log('Manual refresh clicked');
-                    if (publicKey && connected) {
-                      setLoading(true);
-                      try {
-                        const { fetchUserProjects } = await import('../utils/projectService');
-                        const result = await fetchUserProjects(publicKey, wallet);
-                        console.log('Manual refresh result:', result);
-                        if (result.success && result.projects) {
-                          const transformedProjects: Project[] = result.projects.map((project: any) => ({
-                            projectId: project.projectId || project.project_id,
-                            name: project.name || `Project ${project.projectId || project.project_id}`,
-                            location: project.location || 'Unknown Location',
-                            area: project.area || 100,
-                            carbonStored: project.carbonStored || 1000,
-                            creditsIssued: project.creditsIssued || project.credits_issued || 0,
-                            owner: project.owner,
-                            bump: project.bump || 0,
-                            ipfsCid: project.ipfsCid || project.ipfs_cid || '',
-                            verification: {
-                              status: 'pending',
-                              submittedAt: new Date(),
-                              verificationNotes: 'Project retrieved from blockchain.',
-                              requiredDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment'],
-                              submittedDocuments: ['Project Proposal', 'Land Rights', 'Baseline Data', 'Environmental Assessment']
-                            },
-                            canMintCredits: true
-                          }));
-                          setProjects(transformedProjects);
-                        }
-                      } catch (error) {
-                        console.error('Manual refresh error:', error);
-                      } finally {
-                        setLoading(false);
-                      }
+                    try {
+                      await loadProjects();
+                    } catch (error) {
+                      console.error('Refresh failed:', error);
                     }
                   }}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -884,7 +861,8 @@ export default function Dashboard() {
       case 'analytics':
         return <AnalyticsDashboard />;
 
-
+      case 'economics':
+        return <TokenEconomicsDashboard />;
 
       case 'marketplace':
         return <MarketplaceComponent />;
