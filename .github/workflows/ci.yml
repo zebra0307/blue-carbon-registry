@@ -36,32 +36,3 @@ jobs:
         ls -la .next/
         echo "Build completed successfully!"
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: web-app/package-lock.json
-    
-    - name: Install dependencies
-      run: |
-        cd web-app
-        npm ci
-    
-    - name: Build for deployment
-      run: |
-        cd web-app
-        npm run build
-        
-    - name: Deploy to Vercel (handled by Vercel Git integration)
-      run: |
-        echo "Deployment handled by Vercel's Git integration"
-        echo "Web app will be automatically deployed to Vercel"

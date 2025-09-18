@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 ## 🌐 Live Demo
-**🚀 [View Live Web App](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)**
+**🚀 Web Application Available Locally** - Run `npm run dev` in the `web-app` directory
 
 ## � Project Overview
 
@@ -49,8 +49,8 @@ blue-carbon-registry/
 | **Mobile Frontend** | React Native, Expo SDK | 54.0+ |
 | **Backend** | Node.js, Express | 18+ |
 | **Database** | SQLite (Mobile), PostgreSQL (Backend) | Latest |
-| **Storage** | IPFS, Vercel | Latest |
-| **Deployment** | Vercel (Web), EAS Build (Mobile) | Latest |
+| **Storage** | IPFS | Latest |
+| **Development** | Local Development Environment | Latest |
 
 ## 🚀 Quick Start
 
@@ -148,16 +148,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **🌊 Building the future of transparent carbon markets 🌊**
 
-[Live Demo](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app) • [Documentation](docs/) • [Report Bug](issues/) • [Request Feature](issues/)
+[Local Development Setup](#-quick-start) • [Documentation](docs/) • [Report Bug](issues/) • [Request Feature](issues/)
 
 </div>or transparent and verifiable carbon offset management.
 
 ## 🌟 Current Status
 
-✅ **Mobile App**: Fully functional with Expo SDK 54  
-✅ **Web App**: Deployed on Vercel with Solana integration  
-✅ **Smart Contracts**: Deployed on Solana blockchain  
-✅ **Live Demo**: [https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app](https://blue-carbon-registryweb-530u9xa2q-satyendras-projects-137a7df3.vercel.app)
+✅ **Mobile App**: Structured with Expo SDK 54  
+✅ **Web App**: Production-ready with Solana integration  
+✅ **Smart Contracts**: Deployed on Solana devnet  
+✅ **Development Environment**: Fully configured for local development
 
 ## 📁 Project Structure
 
@@ -170,7 +170,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **`src/app/`** - Next.js 14 app router pages
 - **`src/components/`** - Reusable UI components with Solana integration
 - **`src/api/`** - Blockchain and off-chain data access
-- **Deployment**: Auto-deployed via Vercel on git push
+- **Development**: Local development environment with hot reload
 
 ### `/mobile-app/` - React Native Mobile App
 - **`src/components/`** - Mobile UI components
