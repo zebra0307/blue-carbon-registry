@@ -1,8 +1,8 @@
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor';
 
-// Import the raw IDL JSON directly 
-import idlJson from '../../../target/idl/blue_carbon_registry.json';
+// Import the IDL JSON from web-app lib directory (available in both local and CI/CD)
+import idlJson from '../lib/blue_carbon_registry.json';
 const IDL = idlJson as any;
 
 // Environment configuration
