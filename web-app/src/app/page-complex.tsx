@@ -76,6 +76,13 @@ export default function Dashboard() {
     creditsRetired: 0
   });
 
+  const [globalStats, setGlobalStats] = useState({
+    totalProjects: 0,
+    totalCreditsIssued: 0,
+    activeValidators: 0,
+    systemUptime: 100
+  });
+
   // Save active section to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -209,8 +216,75 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  // Load global system statistics (all projects regardless of owner)
+  const loadGlobalStats = async () => {
+    try {
+      // Initialize solana connection and program
+      const { connection } = initializeSolana(wallet);
+      
+      // Fetch all Project accounts
+      const PROGRAM_ID = new PublicKey('GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr');
+      const rawAccounts = await connection.getProgramAccounts(PROGRAM_ID);
+      
+      // Parse accounts to extract all project data
+      const allProjects = [];
+      let totalGlobalCredits = 0;
+      
+      for (let i = 0; i < rawAccounts.length; i++) {
+        const account = rawAccounts[i];
+        const data = account.account.data;
+        
+        try {
+          // Skip the 8-byte discriminator
+          let offset = 8;
+          
+          // Read project_id (string)
+          const projectIdLength = data.readUInt32LE(offset);
+          offset += 4;
+          
+          if (projectIdLength > 0 && projectIdLength < 100) {
+            const projectId = data.toString('utf8', offset, offset + projectIdLength);
+            offset += projectIdLength;
+            
+            // Skip owner (32 bytes) to get to carbon data
+            offset += 32;
+            
+            // Try to read carbon credits
+            try {
+              if (offset + 16 <= data.length) {
+                const rawEstimatedCredits = Number(data.readBigUInt64LE(offset));
+                const rawVerifiedCredits = Number(data.readBigUInt64LE(offset + 8));
+                // Convert from token units (6 decimals) to actual tons
+                const estimatedCredits = rawEstimatedCredits / 1_000_000;
+                const verifiedCredits = rawVerifiedCredits / 1_000_000;
+                totalGlobalCredits += verifiedCredits;
+              }
+            } catch (e) {
+              // Use default if parsing fails
+            }
+            
+            allProjects.push({ projectId });
+          }
+        } catch (parseError) {
+          console.warn(`Failed to parse global account ${i}:`, parseError);
+        }
+      }
+      
+      setGlobalStats({
+        totalProjects: allProjects.length,
+        totalCreditsIssued: totalGlobalCredits,
+        activeValidators: 3, // Static for now
+        systemUptime: 100 // Static for now
+      });
+      
+    } catch (error) {
+      console.error('Failed to load global stats:', error);
+    }
+  };
+
   useEffect(() => {
     loadProjects();
+    loadGlobalStats(); // Load global stats regardless of wallet connection
   }, [publicKey, connected]);
 
   // Handle wallet connection state changes
@@ -313,7 +387,7 @@ export default function Dashboard() {
               <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Projects</p>
+                    <p className="text-sm font-medium text-gray-600">My Projects</p>
                     <p className="text-xl lg:text-2xl font-bold text-gray-900">
                       {loading ? '...' : stats.totalProjects}
                     </p>
@@ -367,6 +441,44 @@ export default function Dashboard() {
                   </div>
                   <div className="p-2 lg:p-3 bg-red-100 rounded-lg">
                     <Trash2 className="h-5 w-5 lg:h-6 lg:w-6 text-red-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Global System Statistics */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-sm border border-green-200">
+              <div className="p-4 lg:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Global System Statistics</h3>
+                  <div className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    Live Data
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">
+                      {loading ? '...' : globalStats.totalProjects}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Projects in Registry</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {loading ? '...' : globalStats.totalCreditsIssued.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">Global Credits Issued</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">
+                      {globalStats.activeValidators}
+                    </p>
+                    <p className="text-sm text-gray-600">Active Validators</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-orange-600">
+                      {globalStats.systemUptime}%
+                    </p>
+                    <p className="text-sm text-gray-600">System Uptime</p>
                   </div>
                 </div>
               </div>

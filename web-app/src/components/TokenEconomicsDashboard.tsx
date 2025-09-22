@@ -161,13 +161,17 @@ export default function TokenEconomicsDashboard() {
             try {
               // Read carbon_tons_estimated (if available)
               if (offset + 8 <= data.length) {
-                carbonTonsEstimated = Number(data.readBigUInt64LE(offset));
+                const rawEstimated = Number(data.readBigUInt64LE(offset));
+                // Convert from token units (6 decimals) to actual tons
+                carbonTonsEstimated = rawEstimated / 1_000_000;
                 offset += 8;
               }
               
               // Read carbon_tons_verified (if available)
               if (offset + 8 <= data.length) {
-                carbonTonsVerified = Number(data.readBigUInt64LE(offset));
+                const rawVerified = Number(data.readBigUInt64LE(offset));
+                // Convert from token units (6 decimals) to actual tons
+                carbonTonsVerified = rawVerified / 1_000_000;
                 offset += 8;
               }
               
@@ -222,7 +226,22 @@ export default function TokenEconomicsDashboard() {
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num);
+    if (num === 0) return '0';
+    
+    const absNum = Math.abs(num);
+    
+    if (absNum >= 1_000_000_000) {
+      return (num / 1_000_000_000).toFixed(1) + 'B';
+    } else if (absNum >= 1_000_000) {
+      return (num / 1_000_000).toFixed(1) + 'M';
+    } else if (absNum >= 1_000) {
+      return (num / 1_000).toFixed(1) + 'K';
+    } else if (absNum >= 1) {
+      return num.toLocaleString();
+    } else {
+      // For small decimal numbers, show 2 decimal places
+      return num.toFixed(2);
+    }
   };
 
   const formatCurrency = (num: number) => {
@@ -292,72 +311,72 @@ export default function TokenEconomicsDashboard() {
           <>
             {/* Key Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-green-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-sm font-medium">Total Tokens Minted</p>
-                    <p className="text-3xl font-bold text-green-600">
+              <div className="bg-white rounded-lg p-4 shadow-lg border-l-4 border-green-500 min-h-[120px]">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-gray-600 text-sm font-medium mb-1">Total Tokens Minted</p>
+                    <p className="text-2xl lg:text-3xl font-bold text-green-600 truncate">
                       {formatNumber(economicsData.totalTokensMinted)}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total SPL tokens in circulation
+                    </p>
                   </div>
-                  <div className="bg-green-100 p-3 rounded-full">
-                    <span className="text-2xl">🪙</span>
+                  <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
+                    <span className="text-xl">🪙</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Total SPL tokens in circulation
-                </p>
               </div>
 
-              <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-blue-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-sm font-medium">Carbon Credits Issued</p>
-                    <p className="text-3xl font-bold text-blue-600">
+              <div className="bg-white rounded-lg p-4 shadow-lg border-l-4 border-blue-500 min-h-[120px]">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-gray-600 text-sm font-medium mb-1">Carbon Credits Issued</p>
+                    <p className="text-2xl lg:text-3xl font-bold text-blue-600 truncate">
                       {formatNumber(economicsData.totalCarbonCreditsIssued)}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tons of CO₂ offset verified
+                    </p>
                   </div>
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <span className="text-2xl">🌊</span>
+                  <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                    <span className="text-xl">🌊</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Tons of CO₂ offset verified
-                </p>
               </div>
 
-              <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-purple-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-sm font-medium">Total Projects</p>
-                    <p className="text-3xl font-bold text-purple-600">
+              <div className="bg-white rounded-lg p-4 shadow-lg border-l-4 border-purple-500 min-h-[120px]">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-gray-600 text-sm font-medium mb-1">Total Projects</p>
+                    <p className="text-2xl lg:text-3xl font-bold text-purple-600 truncate">
                       {formatNumber(economicsData.totalProjects)}
                     </p>
-                  </div>
-                  <div className="bg-purple-100 p-3 rounded-full">
-                    <span className="text-2xl">📊</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {economicsData.verifiedProjects} verified projects
-                </p>
-              </div>
-
-              <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-orange-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-sm font-medium">Active Wallets</p>
-                    <p className="text-3xl font-bold text-orange-600">
-                      {formatNumber(economicsData.activeWallets)}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {economicsData.verifiedProjects} verified projects
                     </p>
                   </div>
-                  <div className="bg-orange-100 p-3 rounded-full">
-                    <span className="text-2xl">👛</span>
+                  <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
+                    <span className="text-xl">📊</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {economicsData.totalTransactions} total transactions
-                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-lg border-l-4 border-orange-500 min-h-[120px]">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-gray-600 text-sm font-medium mb-1">Active Wallets</p>
+                    <p className="text-2xl lg:text-3xl font-bold text-orange-600 truncate">
+                      {formatNumber(economicsData.activeWallets)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {economicsData.totalTransactions} total transactions
+                    </p>
+                  </div>
+                  <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
+                    <span className="text-xl">👛</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -367,24 +386,24 @@ export default function TokenEconomicsDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-4xl mb-2">🌊</div>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-xl lg:text-2xl font-bold text-green-600 truncate">
                     {formatNumber(economicsData.environmentalImpact.co2Offset)}
                   </p>
-                  <p className="text-gray-600">Tons CO₂ Offset</p>
+                  <p className="text-gray-600 text-sm">Tons CO₂ Offset</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-4xl mb-2">🌳</div>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-xl lg:text-2xl font-bold text-green-600 truncate">
                     {formatNumber(economicsData.environmentalImpact.treesEquivalent)}
                   </p>
-                  <p className="text-gray-600">Trees Equivalent</p>
+                  <p className="text-gray-600 text-sm">Trees Equivalent</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-4xl mb-2">⚡</div>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-xl lg:text-2xl font-bold text-green-600 truncate">
                     {formatNumber(economicsData.environmentalImpact.energySaved)}
                   </p>
-                  <p className="text-gray-600">MWh Energy Saved</p>
+                  <p className="text-gray-600 text-sm">MWh Energy Saved</p>
                 </div>
               </div>
             </div>
