@@ -114,18 +114,17 @@
     {
       "name": "register_project",
       "docs": [
-        "Registers a new project on the blockchain.",
-        "This instruction creates a new Project account and stores the initial project data."
+        "Registers a new carbon credit project"
       ],
       "discriminator": [
-        130,
-        150,
-        121,
-        216,
-        183,
-        225,
-        243,
-        192
+        198,
+        51,
+        53,
+        241,
+        116,
+        19,
+        248,
+        113
       ],
       "accounts": [
         {
@@ -180,23 +179,19 @@
     {
       "name": "retire_credits",
       "docs": [
-        "Retires carbon credits by transferring them to a burn account."
+        "Retires carbon credits permanently"
       ],
       "discriminator": [
-        0,
-        223,
-        106,
-        1,
-        228,
-        82,
-        170,
-        45
+        145,
+        21,
+        99,
+        104,
+        227,
+        255,
+        53,
+        73
       ],
       "accounts": [
-        {
-          "name": "from_account",
-          "writable": true
-        },
         {
           "name": "retirement_account",
           "writable": true
@@ -220,17 +215,17 @@
     {
       "name": "transfer_credits",
       "docs": [
-        "Transfers carbon credits from one token account to another."
+        "Transfers carbon credits between accounts"
       ],
       "discriminator": [
-        193,
-        72,
-        117,
-        37,
-        181,
-        135,
-        246,
-        15
+        180,
+        235,
+        247,
+        85,
+        218,
+        84,
+        144,
+        76
       ],
       "accounts": [
         {
@@ -260,16 +255,16 @@
   ],
   "accounts": [
     {
-      "name": "Project",
+      "name": "project",
       "discriminator": [
         205,
-        168,
-        189,
-        202,
-        181,
-        247,
-        142,
-        19
+        222,
+        112,
+        7,
+        165,
+        155,
+        206,
+        218
       ]
     }
   ],

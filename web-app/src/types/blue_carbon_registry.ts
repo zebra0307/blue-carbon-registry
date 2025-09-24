@@ -11,6 +11,10 @@ export type BlueCarbonRegistry = {
   "instructions": [
     {
       "name": "mintCredits";
+      "docs": [
+        "Mints new carbon credits (SPL tokens) to a recipient.",
+        "This instruction uses Cross-Program Invocation (CPI) to call the SPL Token Program."
+      ];
       "accounts": [
         {
           "name": "mint";
@@ -52,6 +56,9 @@ export type BlueCarbonRegistry = {
     },
     {
       "name": "registerProject";
+      "docs": [
+        "Registers a new carbon credit project"
+      ];
       "accounts": [
         {
           "name": "project";
@@ -82,6 +89,9 @@ export type BlueCarbonRegistry = {
     },
     {
       "name": "retireCredits";
+      "docs": [
+        "Retires carbon credits permanently"
+      ];
       "accounts": [
         {
           "name": "retirementAccount";
@@ -108,6 +118,9 @@ export type BlueCarbonRegistry = {
     },
     {
       "name": "transferCredits";
+      "docs": [
+        "Transfers carbon credits between accounts"
+      ];
       "accounts": [
         {
           "name": "fromAccount";
@@ -191,6 +204,10 @@ export const IDL: BlueCarbonRegistry = {
   "instructions": [
     {
       "name": "mintCredits",
+      "docs": [
+        "Mints new carbon credits (SPL tokens) to a recipient.",
+        "This instruction uses Cross-Program Invocation (CPI) to call the SPL Token Program."
+      ],
       "accounts": [
         {
           "name": "mint",
@@ -232,6 +249,9 @@ export const IDL: BlueCarbonRegistry = {
     },
     {
       "name": "registerProject",
+      "docs": [
+        "Registers a new carbon credit project"
+      ],
       "accounts": [
         {
           "name": "project",
@@ -262,6 +282,9 @@ export const IDL: BlueCarbonRegistry = {
     },
     {
       "name": "retireCredits",
+      "docs": [
+        "Retires carbon credits permanently"
+      ],
       "accounts": [
         {
           "name": "retirementAccount",
@@ -288,6 +311,9 @@ export const IDL: BlueCarbonRegistry = {
     },
     {
       "name": "transferCredits",
+      "docs": [
+        "Transfers carbon credits between accounts"
+      ],
       "accounts": [
         {
           "name": "fromAccount",

@@ -1,136 +1,490 @@
-# 🌊 Blue Carbon Registry
+# 🌊 Blue Carbon Registry - Web Application# 🌊 Blue Carbon Registry - Web Application# 🌊 Blue Carbon Registry - Web Application
 
-> A decentralized carbon credit registry built on Solana blockchain for transparent and verifiable carbon offset management.
 
-[![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)](https://solana.com/)
+
+A blockchain-powered registry for blue carbon projects with tokenized carbon credits on Solana.
+
+
+
+[![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)](https://solana.com/)A blockchain-powered registry for blue carbon projects with tokenized carbon credits on Solana.A blockchain-powered registry for blue carbon projects with tokenized carbon credits on Solana.
+
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-## 🌐 Live Demo
-**🚀 Web Application Available Locally** - Run `npm run dev` in the `web-app` directory
 
-## � Project Overview
 
-Blue Carbon Registry is a comprehensive blockchain-based platform that enables transparent tracking, verification, and trading of carbon credits. Built on Solana for high performance and low transaction costs, the platform includes both web and mobile applications for complete ecosystem management.
+## 🚀 Live Demo[![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)](https://solana.com/)[![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)](https://solana.com/)
 
-### 🎯 Key Features
 
-- 🌱 **Project Registration** - Register carbon offset projects on-chain with immutable records
-- 🪙 **Credit Minting** - Issue verified carbon credits as SPL tokens  
-- 🔄 **Credit Trading** - Seamless transfer and trading of credits between accounts
-- 🔥 **Credit Retirement** - Permanently retire credits for verified offset claims
-- 📊 **IPFS Integration** - Decentralized metadata and document storage
-- 📱 **Cross-platform Apps** - Professional web dashboard and mobile data collection
-- 📸 **Field Data Collection** - Mobile camera integration for on-site verification
-- 💾 **Offline Capabilities** - SQLite database with sync for remote field work
-- 🌐 **Wallet Integration** - Support for all major Solana wallets
 
-## 🏗️ Architecture
+**🌐 Web Application** - Available at `localhost:3000` when running locally[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 
-### 📁 Project Structure
 
-```
-blue-carbon-registry/
-├── programs/blue-carbon-registry/    # Solana smart contracts
-├── web-app/                         # Next.js dashboard
-├── mobile-app/                      # React Native field app  
-├── backend-bridge/                  # Node.js API services
-├── shared/                         # Common utilities
-└── data/                          # Field reports & imagery
-```
 
-### 🔧 Technology Stack
+## 🌐 Features[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-| Component | Technology | Version |
-|-----------|------------|---------|
-| **Blockchain** | Solana, Anchor Framework | Latest |
-| **Web Frontend** | Next.js, TypeScript, Tailwind CSS | 14.2.32 |
-| **Mobile Frontend** | React Native, Expo SDK | 54.0+ |
-| **Backend** | Node.js, Express | 18+ |
-| **Database** | SQLite (Mobile), PostgreSQL (Backend) | Latest |
-| **Storage** | IPFS | Latest |
-| **Development** | Local Development Environment | Latest |
+
+
+- **🔗 Blockchain Integration**: Real Solana blockchain connectivity with SPL tokens
+
+- **📋 Project Management**: Register and manage blue carbon restoration projects  
+
+- **📤 Document Upload**: IPFS-based document storage and verification## 🚀 Live Demo## 🚀 Live Demo
+
+- **🪙 Carbon Credits**: Mint and transfer tokenized carbon credits
+
+- **📱 Mobile-Responsive**: Optimized for mobile browsers and desktop
+
+- **👛 Wallet Integration**: Phantom, Solflare, and other Solana wallets
+
+**🌐 Web Application** - Available at `localhost:3000` when running locally**🌐 Web Application** - Available at `localhost:3000` when running locally
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Rust 1.70+
-- Solana CLI
-- Anchor CLI
-- Expo CLI (for mobile)
 
-### 🌐 Web Application
+
 ```bash
-# Navigate to web app
+
+# Clone the repository## 🌐 Features## 🌐 Features
+
+git clone https://github.com/zebra0307/blue-carbon-registry.git
+
+cd blue-carbon-registry
+
+
+
+# Install web app dependencies- **🔗 Blockchain Integration**: Real Solana blockchain connectivity with SPL tokens- **🔗 Blockchain Integration**: Real Solana blockchain connectivity with SPL tokens
+
 cd web-app
 
-# Install dependencies
-npm install
+npm install- **📋 Project Management**: Register and manage blue carbon restoration projects  - **📋 Project Management**: Register and manage blue carbon restoration projects  
 
-# Run development server
+
+
+# Start development server- **📤 Document Upload**: IPFS-based document storage and verification- **📤 Document Upload**: IPFS-based document storage and verification
+
 npm run dev
 
+```- **🪙 Carbon Credits**: Mint and transfer tokenized carbon credits- **🪙 Carbon Credits**: Mint and transfer tokenized carbon credits
+
+
+
+The web application will be available at `http://localhost:3000`- **📱 Mobile-Responsive**: Optimized for mobile browsers and desktop- **📱 Mobile-Responsive**: Optimized for mobile browsers and desktop
+
+
+
+## 🏗️ Clean Architecture- **👛 Wallet Integration**: Phantom, Solflare, and other Solana wallets- **👛 Wallet Integration**: Phantom, Solflare, and other Solana wallets
+
+
+
+```
+
+blue-carbon-registry/
+
+├── web-app/                         # Next.js web application## 🚀 Quick Start## 🚀 Quick Start
+
+├── programs/                        # Solana smart contracts  
+
+├── tests/                           # Smart contract tests
+
+├── migrations/                      # Deployment scripts
+
+├── target/                          # Rust build artifacts```bash```bash
+
+├── .anchor/                         # Anchor framework cache
+
+└── node_modules/                    # Dependencies# Clone the repository# Clone the repository
+
+```
+
+git clone https://github.com/zebra0307/blue-carbon-registry.gitgit clone https://github.com/zebra0307/blue-carbon-registry.git
+
+## 🛠️ Tech Stack
+
+cd blue-carbon-registrycd blue-carbon-registry
+
+| Component | Technology | Version |
+
+|-----------|------------|---------|
+
+| **Frontend** | Next.js, React, TypeScript | 14.2+ |
+
+| **Blockchain** | Solana, Anchor Framework | 0.30+ |# Install web app dependencies# Install web app dependencies
+
+| **Storage** | IPFS (Pinata) | - |
+
+| **Styling** | Tailwind CSS | 3.4+ |cd web-app
+
+
+
+## 📱 Mobile Accessnpm installcd web-app
+
+
+
+The web application is fully responsive and optimized for mobile browsers. Users can access all functionality through their mobile browser without needing a separate mobile app.npm install
+
+
+
+## 🔗 Blockchain Integration# Start development server
+
+
+
+- **Network**: Solana Devnetnpm run dev# Start development server
+
+- **Program ID**: `GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr`
+
+- **Wallet Support**: Phantom, Solflare, Backpack, and other Solana wallets```npm run dev
+
+
+
+## 📦 Deployment```
+
+
+
+```bashThe web application will be available at `http://localhost:3000`
+
 # Build for production
+
+cd web-appThe web application will be available at `http://localhost:3000`
+
 npm run build
+
+## 🏗️ Architecture
+
+# Deploy to Vercel (recommended)
+
+vercel deploy## 🏗️ Architecture
+
 ```
 
-### 📱 Mobile Application
+```
+
+## 🔧 Environment Setup
+
+blue-carbon-registry/```
+
+Required environment variables for the web app:
+
+- `NEXT_PUBLIC_SOLANA_RPC_URL`├── web-app/                         # Next.js web applicationblue-carbon-registry/
+
+- `NEXT_PUBLIC_PINATA_JWT`
+
+- `NEXT_PUBLIC_PINATA_GATEWAY`├── programs/                        # Solana smart contracts├── web-app/                         # Next.js web application
+
+
+
+## 🤝 Contributing├── backend-bridge/                  # Backend API services├── programs/                        # Solana smart contracts
+
+
+
+1. Fork the repository├── shared/                          # Shared utilities and types├── backend-bridge/                  # Backend API services
+
+2. Create a feature branch
+
+3. Make your changes├── tests/                           # Smart contract tests├── shared/                          # Shared utilities and types
+
+4. Submit a pull request
+
+└── data/                           # Sample data and imagery├── tests/                           # Smart contract tests
+
+## 📄 License
+
+```└── data/                           # Sample data and imagery
+
+This project is licensed under the MIT License.
+
+```
+
+## 📞 Support
+
+## 🛠️ Tech Stack
+
+For questions or support, please open an issue in the GitHub repository.
+## 🛠️ Tech Stack
+
+| Component | Technology | Version |
+
+|-----------|------------|---------|| Component | Technology | Version |
+
+| **Frontend** | Next.js, React, TypeScript | 14.2+ ||-----------|------------|---------|
+
+| **Blockchain** | Solana, Anchor Framework | 0.30+ || **Frontend** | Next.js, React, TypeScript | 14.2+ |
+
+| **Storage** | IPFS (Pinata) | - || **Blockchain** | Solana, Anchor Framework | 0.30+ |
+
+| **Styling** | Tailwind CSS | 3.4+ || **Storage** | IPFS (Pinata) | - |
+
+| **Styling** | Tailwind CSS | 3.4+ |
+
+## 📱 Mobile Access
+
+## 📱 Mobile Access
+
+The web application is fully responsive and optimized for mobile browsers. Users can access all functionality through their mobile browser without needing a separate mobile app.
+
+The web application is fully responsive and optimized for mobile browsers. Users can access all functionality through their mobile browser without needing a separate mobile app.
+
+## 🔗 Blockchain Integration
+
+## 🔗 Blockchain Integration
+
+- **Network**: Solana Devnet
+
+- **Program ID**: `GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr`- **Network**: Solana Devnet
+
+- **Wallet Support**: Phantom, Solflare, Backpack, and other Solana wallets- **Program ID**: `GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr`
+
+- **Wallet Support**: Phantom, Solflare, Backpack, and other Solana wallets
+
+## 📦 Deployment
+
+## 📦 Deployment
+
 ```bash
-# Navigate to mobile app
-cd mobile-app
 
-# Install dependencies
-npm install
+# Build for production```bash
 
-# Start Expo development server
-npx expo start
+cd web-app# Build for production
 
-# Run on devices
-npx expo run:ios     # iOS
-npx expo run:android # Android
+npm run buildcd web-app
+
+npm run build
+
+# Or deploy to Vercel/Netlify
+
+npm run export# Or deploy to Vercel/Netlify
+
+```npm run export
+
 ```
-
-### ⛓️ Smart Contract Development
-```bash
-# Build the program
-anchor build
-
-# Run tests
-anchor test
-
-# Deploy to devnet
-anchor deploy --provider.cluster devnet
-```
-
-## 📱 Application Features
-
-### Web Dashboard
-- 🎛️ **Project Management** - Create and manage carbon credit projects
-- 📊 **Analytics Dashboard** - Real-time statistics and visualizations  
-- 🔗 **Wallet Integration** - Connect with Phantom, Solflare, and other Solana wallets
-- 📈 **Trading Interface** - Buy, sell, and retire carbon credits
-- 📋 **Verification Tools** - Review and approve field reports
-
-### Mobile App
-- 📸 **Camera Integration** - Capture geo-tagged field photos
-- 📍 **GPS Tracking** - Automatic location logging for verification
-- 💾 **Offline Storage** - SQLite database for remote field work
-- 🔄 **Data Synchronization** - Sync with backend when connectivity available
-- 📊 **Data Collection Forms** - Structured field report creation
-
-## 🌍 Use Cases
-
-- **🏢 Carbon Credit Issuers** - Register and manage offset projects
-- **🏭 Enterprises** - Purchase and retire credits for sustainability goals  
-- **🔬 Verifiers** - Conduct field verification and data collection
-- **💼 Traders** - Buy and sell verified carbon credits
-- **📊 Researchers** - Access transparent carbon offset data
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+## 🤝 Contributing
+
+1. Fork the repository
+
+2. Create a feature branch1. Fork the repository
+
+3. Make your changes2. Create a feature branch
+
+4. Submit a pull request3. Make your changes
+
+4. Submit a pull request
+
+## 📄 License
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+This project is licensed under the MIT License.
+
+## 🔧 Environment Setup
+
+## 🔧 Environment Setup
+
+Required environment variables for the web app:
+
+- `NEXT_PUBLIC_SOLANA_RPC_URL`Required environment variables for the web app:
+
+- `NEXT_PUBLIC_PINATA_JWT`- `NEXT_PUBLIC_SOLANA_RPC_URL`
+
+- `NEXT_PUBLIC_PINATA_GATEWAY`- `NEXT_PUBLIC_PINATA_JWT`
+
+- `NEXT_PUBLIC_PINATA_GATEWAY`
+
+## 📞 Support
+
+## 📞 Support
+
+For questions or support, please open an issue in the GitHub repository.
+For questions or support, please open an issue in the GitHub repository.
+
+
+
+## 📁 Project Structure### 🔧 Technology Stack
+
+
+
+```| Component | Technology | Version |
+
+blue-carbon-registry/|-----------|------------|---------|
+
+├── programs/                  # Solana smart contracts| **Blockchain** | Solana, Anchor Framework | Latest |
+
+├── web-app/                  # Next.js web application| **Web Frontend** | Next.js, TypeScript, Tailwind CSS | 14.2.32 |
+
+│   ├── src/| **Mobile Frontend** | React Native, Expo SDK | 54.0+ |
+
+│   │   ├── app/             # Next.js app router| **Backend** | Node.js, Express | 18+ |
+
+│   │   ├── components/      # React components| **Database** | SQLite (Mobile), PostgreSQL (Backend) | Latest |
+
+│   │   ├── utils/           # Blockchain & IPFS services| **Storage** | IPFS | Latest |
+
+│   │   └── types/           # TypeScript definitions| **Development** | Local Development Environment | Latest |
+
+│   ├── package.json         # Web app dependencies
+
+│   └── next.config.js       # Next.js configuration## 🚀 Quick Start
+
+├── shared/                   # Common utilities
+
+├── README.md                # This file### Prerequisites
+
+└── package.json             # Root workspace config- Node.js 18+
+
+```- Rust 1.70+
+
+- Solana CLI
+
+## 📱 Mobile Access- Anchor CLI
+
+- Expo CLI (for mobile)
+
+The web application is fully responsive and optimized for mobile browsers:
+
+### 🌐 Web Application
+
+- **📷 Camera Access**: Take photos directly from mobile browser```bash
+
+- **📍 GPS Location**: Access device location for verification  # Navigate to web app
+
+- **👆 Touch Interface**: Optimized for mobile interactioncd web-app
+
+- **⚡ Offline Capable**: Service worker for offline functionality
+
+- **👛 Mobile Wallets**: Full mobile wallet integration# Install dependencies
+
+npm install
+
+**Perfect for field workers and coastal communities** - no app installation required!
+
+# Run development server
+
+## 🔧 Configurationnpm run dev
+
+
+
+1. Copy `.env.example` to `.env.local` in the `web-app` directory# Build for production
+
+2. Configure the following variables:npm run build
+
+   ```env```
+
+   NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
+
+   NEXT_PUBLIC_PROGRAM_ID=GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr### 📱 Mobile Application
+
+   ``````bash
+
+# Navigate to mobile app
+
+## 📦 Deploymentcd mobile-app
+
+
+
+```bash# Install dependencies
+
+# Build for productionnpm install
+
+cd web-app
+
+npm run build# Start Expo development server
+
+npx expo start
+
+# Deploy to Vercel (recommended)
+
+vercel deploy# Run on devices
+
+npx expo run:ios     # iOS
+
+# Or deploy to Netlify/AWS/other platformsnpx expo run:android # Android
+
+npm run export```
+
+```
+
+### ⛓️ Smart Contract Development
+
+## 🌱 Usage```bash
+
+# Build the program
+
+1. **👛 Connect Wallet** - Use any Solana wallet (Phantom, Solflare, etc.)anchor build
+
+2. **📋 Register Project** - Create a new blue carbon restoration project
+
+3. **📤 Upload Documents** - Add verification documents to IPFS# Run tests
+
+4. **🪙 Mint Credits** - Create tokenized carbon credits on Solanaanchor test
+
+5. **🔄 Transfer/Retire** - Manage carbon credit lifecycle
+
+# Deploy to devnet
+
+## 🎯 Target Usersanchor deploy --provider.cluster devnet
+
+```
+
+- **🏘️ Coastal Communities** - Access via mobile browser for project registration
+
+- **🌱 NGOs** - Manage multiple blue carbon projects  ## 📱 Application Features
+
+- **🏢 Corporations** - Purchase and retire carbon credits
+
+- **📊 Carbon Registries** - Verify and track offset projects### Web Dashboard
+
+- 🎛️ **Project Management** - Create and manage carbon credit projects
+
+## 🔗 Smart Contract- 📊 **Analytics Dashboard** - Real-time statistics and visualizations  
+
+- 🔗 **Wallet Integration** - Connect with Phantom, Solflare, and other Solana wallets
+
+- **Program ID**: `GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr`- 📈 **Trading Interface** - Buy, sell, and retire carbon credits
+
+- **Network**: Solana Devnet- 📋 **Verification Tools** - Review and approve field reports
+
+- **Features**: Project registration, credit minting, transfers, retirement
+
+### Mobile App
+
+## 🚀 Production Ready- 📸 **Camera Integration** - Capture geo-tagged field photos
+
+- 📍 **GPS Tracking** - Automatic location logging for verification
+
+The web application is production-ready with:- 💾 **Offline Storage** - SQLite database for remote field work
+
+- ✅ Mobile-responsive design- 🔄 **Data Synchronization** - Sync with backend when connectivity available
+
+- ✅ Real blockchain integration  - 📊 **Data Collection Forms** - Structured field report creation
+
+- ✅ IPFS document storage
+
+- ✅ Comprehensive error handling## 🌍 Use Cases
+
+- ✅ TypeScript throughout
+
+- ✅ Performance optimized- **🏢 Carbon Credit Issuers** - Register and manage offset projects
+
+- **🏭 Enterprises** - Purchase and retire credits for sustainability goals  
+
+## 📄 License- **🔬 Verifiers** - Conduct field verification and data collection
+
+- **💼 Traders** - Buy and sell verified carbon credits
+
+MIT License - Perfect for open source blue carbon initiatives.- **📊 Researchers** - Access transparent carbon offset data
+
+
+
+---## 🤝 Contributing
+
+
+
+**🌊 Empowering coastal communities through blockchain technology for blue carbon management** 🌱We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)

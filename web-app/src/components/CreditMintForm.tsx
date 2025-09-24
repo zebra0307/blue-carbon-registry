@@ -8,7 +8,11 @@ import {
   mintVerifiedCredits, 
   getCarbonTokenBalance, 
   getProjectData,
-  getGlobalRegistryData 
+  getGlobalRegistryData,
+  createCarbonCreditToken,
+  mintCarbonCredits,
+  getTokenBalance,
+  getAllTokenAccounts
 } from '@/utils/solana';
 
 interface CreditMintFormProps {
@@ -28,6 +32,22 @@ interface TokenBalanceInfo {
   balance: number;
   tokenAccount: string;
   loading: boolean;
+}
+
+interface ProjectTokenInfo {
+  mint?: string;
+  name?: string;
+  symbol?: string;
+  totalSupply?: number;
+  decimals?: number;
+  created: boolean;
+  loading: boolean;
+}
+
+interface TokenCreationData {
+  tokenName: string;
+  tokenSymbol: string;
+  totalSupply: string;
 }
 
 export default function CreditMintForm({ projectId, onSubmit, onCancel }: CreditMintFormProps) {
@@ -55,6 +75,17 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
     tokenAccount: '',
     loading: true
   });
+  const [projectToken, setProjectToken] = useState<ProjectTokenInfo>({
+    created: false,
+    loading: true
+  });
+  const [tokenCreationData, setTokenCreationData] = useState<TokenCreationData>({
+    tokenName: '',
+    tokenSymbol: '',
+    totalSupply: ''
+  });
+  const [showTokenCreation, setShowTokenCreation] = useState(false);
+  const [allTokenAccounts, setAllTokenAccounts] = useState<any[]>([]);
   const [transactionStatus, setTransactionStatus] = useState<string>('');
   const [transactionSignature, setTransactionSignature] = useState<string>('');
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
@@ -64,6 +95,7 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
     if (connected && publicKey) {
       loadProjectStatus();
       loadTokenBalance();
+      loadTokenAccounts();
     }
   }, [connected, publicKey, projectId]);
 
@@ -176,6 +208,155 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
       const errorInfo = getErrorMessage(err);
       setErrorWithType(`Failed to load token balance: ${errorInfo.message}`, errorInfo.type);
       setTokenBalance(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const loadTokenAccounts = async () => {
+    if (!publicKey) return;
+    
+    setProjectToken(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const accountsResult = await getAllTokenAccounts(wallet);
+      
+      if (accountsResult.success && accountsResult.accounts) {
+        setAllTokenAccounts(accountsResult.accounts);
+        
+        // Check if we have any project-specific tokens
+        // In a real implementation, you'd store the project token mint in your database
+        // For now, we'll just check if any tokens exist
+        const hasProjectTokens = accountsResult.accounts.length > 0;
+        
+        setProjectToken({
+          created: hasProjectTokens,
+          loading: false,
+          // You would populate these from your project database
+          // mint: 'project_token_mint_address',
+          // name: 'Project Carbon Credits',
+          // symbol: 'PCC',
+          // totalSupply: 1000000,
+          // decimals: 6
+        });
+      } else {
+        setProjectToken({
+          created: false,
+          loading: false
+        });
+      }
+    } catch (err) {
+      console.error('Error loading token accounts:', err);
+      setProjectToken({
+        created: false,
+        loading: false
+      });
+    }
+  };
+
+  const handleCreateProjectToken = async () => {
+    if (!connected || !publicKey) {
+      setErrorWithType('Please connect your wallet first', 'wallet');
+      return;
+    }
+
+    if (!tokenCreationData.tokenName || !tokenCreationData.tokenSymbol || !tokenCreationData.totalSupply) {
+      setErrorWithType('Please fill in all token creation fields', 'validation');
+      return;
+    }
+
+    const totalSupply = parseFloat(tokenCreationData.totalSupply);
+    if (isNaN(totalSupply) || totalSupply <= 0) {
+      setErrorWithType('Please enter a valid total supply', 'validation');
+      return;
+    }
+
+    setLoading(true);
+    setTransactionStatus('Creating project token...');
+    
+    try {
+      const result = await createCarbonCreditToken(
+        wallet,
+        projectId,
+        tokenCreationData.tokenName,
+        tokenCreationData.tokenSymbol,
+        totalSupply
+      );
+
+      if (result.success && result.mint) {
+        setProjectToken({
+          created: true,
+          loading: false,
+          mint: result.mint,
+          name: tokenCreationData.tokenName,
+          symbol: tokenCreationData.tokenSymbol,
+          totalSupply: totalSupply,
+          decimals: result.decimals
+        });
+        
+        setTransactionStatus(`Token created successfully! Mint: ${result.mint}`);
+        setShowTokenCreation(false);
+        
+        // Refresh token accounts
+        await loadTokenAccounts();
+        await loadTokenBalance();
+        
+        // Clear the form
+        setTokenCreationData({
+          tokenName: '',
+          tokenSymbol: '',
+          totalSupply: ''
+        });
+        
+        setTimeout(() => setTransactionStatus(''), 3000);
+      } else {
+        const errorInfo = getErrorMessage(result.error || 'Failed to create token');
+        setErrorWithType(errorInfo.message, errorInfo.type);
+      }
+    } catch (err) {
+      console.error('Token creation error:', err);
+      const errorInfo = getErrorMessage(err);
+      setErrorWithType(errorInfo.message, errorInfo.type);
+    } finally {
+      setLoading(false);
+      setTransactionStatus('');
+    }
+  };
+
+  const handleMintToAddress = async (mintAddress: string, recipientAddress: string, amount: number) => {
+    if (!connected || !publicKey) {
+      setErrorWithType('Please connect your wallet first', 'wallet');
+      return;
+    }
+
+    setLoading(true);
+    setTransactionStatus('Minting tokens...');
+    
+    try {
+      const result = await mintCarbonCredits(
+        wallet,
+        mintAddress,
+        recipientAddress,
+        amount
+      );
+
+      if (result.success) {
+        setTransactionStatus(`Successfully minted ${amount} tokens to ${recipientAddress.substring(0, 8)}...`);
+        
+        // Refresh balances
+        await loadTokenAccounts();
+        await loadTokenBalance();
+        
+        setTimeout(() => setTransactionStatus(''), 3000);
+      } else {
+        const errorInfo = getErrorMessage(result.error || 'Failed to mint tokens');
+        setErrorWithType(errorInfo.message, errorInfo.type);
+      }
+    } catch (err) {
+      console.error('Token minting error:', err);
+      const errorInfo = getErrorMessage(err);
+      setErrorWithType(errorInfo.message, errorInfo.type);
+    } finally {
+      setLoading(false);
+      setTransactionStatus('');
     }
   };
 
@@ -444,6 +625,153 @@ export default function CreditMintForm({ projectId, onSubmit, onCancel }: Credit
                 Token Account: {tokenBalance.tokenAccount}
               </p>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Project Token Management */}
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900">Project Token Management</h3>
+          {!projectToken.created && (
+            <button
+              type="button"
+              onClick={() => setShowTokenCreation(!showTokenCreation)}
+              className="text-sm bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700 transition-colors"
+            >
+              Create Project Token
+            </button>
+          )}
+        </div>
+        
+        {projectToken.loading ? (
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ) : projectToken.created ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Token Status:</span>
+              <span className="text-sm text-green-600 font-medium">✅ Created</span>
+            </div>
+            {projectToken.name && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Token Name:</span>
+                <span className="text-sm text-gray-900">{projectToken.name}</span>
+              </div>
+            )}
+            {projectToken.symbol && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Symbol:</span>
+                <span className="text-sm text-gray-900">{projectToken.symbol}</span>
+              </div>
+            )}
+            {projectToken.mint && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Mint Address:</span>
+                <span className="text-xs text-gray-600 font-mono break-all">{projectToken.mint}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-600 mb-3">
+              Create a project-specific token for enhanced trading capabilities
+            </p>
+            <div className="text-xs text-gray-500">
+              <p>• Custom token name and symbol</p>
+              <p>• Independent of global carbon credits</p>
+              <p>• Enhanced trading features</p>
+            </div>
+          </div>
+        )}
+
+        {/* Token Creation Form */}
+        {showTokenCreation && !projectToken.created && (
+          <div className="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+            <h4 className="text-md font-semibold text-gray-900 mb-3">Create Project Token</h4>
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="tokenName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Token Name *
+                </label>
+                <input
+                  type="text"
+                  id="tokenName"
+                  value={tokenCreationData.tokenName}
+                  onChange={(e) => setTokenCreationData(prev => ({ ...prev, tokenName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  placeholder="e.g., Mangrove Carbon Credits"
+                />
+              </div>
+              <div>
+                <label htmlFor="tokenSymbol" className="block text-sm font-medium text-gray-700 mb-1">
+                  Token Symbol *
+                </label>
+                <input
+                  type="text"
+                  id="tokenSymbol"
+                  value={tokenCreationData.tokenSymbol}
+                  onChange={(e) => setTokenCreationData(prev => ({ ...prev, tokenSymbol: e.target.value.toUpperCase() }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  placeholder="e.g., MCC"
+                  maxLength={5}
+                />
+              </div>
+              <div>
+                <label htmlFor="totalSupply" className="block text-sm font-medium text-gray-700 mb-1">
+                  Initial Supply *
+                </label>
+                <input
+                  type="number"
+                  id="totalSupply"
+                  value={tokenCreationData.totalSupply}
+                  onChange={(e) => setTokenCreationData(prev => ({ ...prev, totalSupply: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                  placeholder="e.g., 1000000"
+                  min="1"
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={handleCreateProjectToken}
+                  disabled={loading || !tokenCreationData.tokenName || !tokenCreationData.tokenSymbol || !tokenCreationData.totalSupply}
+                  className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Creating...' : 'Create Token'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTokenCreation(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* All Token Accounts Display */}
+        {allTokenAccounts.length > 0 && (
+          <div className="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+            <h4 className="text-md font-semibold text-gray-900 mb-3">Your Token Accounts</h4>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {allTokenAccounts.map((account, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                  <div>
+                    <p className="font-mono text-gray-600">{account.mint.substring(0, 8)}...{account.mint.substring(-8)}</p>
+                    <p className="text-gray-500">Balance: {account.balance}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{account.balance.toLocaleString()} tokens</p>
+                    <p className="text-gray-500">{account.decimals} decimals</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

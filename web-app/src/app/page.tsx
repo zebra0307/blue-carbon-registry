@@ -1,12 +1,15 @@
 'use client';
 
 import { SolanaWalletProvider } from '@/components/WalletProvider';
-import Dashboard from '@/app/page-complex';
+import { Layout } from '@/components/Navigation';
+import DashboardContent from '@/components/DashboardContent';
 
-export default function Page() {
+export default function Home() {
   return (
     <SolanaWalletProvider>
-      <Dashboard />
+      <Layout>
+        <DashboardContent />
+      </Layout>
     </SolanaWalletProvider>
   );
 }

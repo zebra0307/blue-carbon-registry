@@ -1,0 +1,1 @@
+// Authentication types and interfaces
