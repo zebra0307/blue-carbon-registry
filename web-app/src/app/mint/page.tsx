@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SolanaWalletProvider } from '@/components/WalletProvider';
+
 import { Layout } from '@/components/Navigation';
 import { Coins, TreePine, Award, Zap, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAllProjects } from '@/hooks/useBlockchainData';
@@ -199,10 +199,8 @@ function MintCreditsContent() {
 
 export default function MintCreditsPage() {
   return (
-    <SolanaWalletProvider>
-      <Layout>
-        <MintCreditsContent />
-      </Layout>
-    </SolanaWalletProvider>
+    <Layout>
+      <MintCreditsContent />
+    </Layout>
   );
 }

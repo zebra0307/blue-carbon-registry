@@ -1,22 +1,22 @@
 {
-  "name": "Blue Carbon Registry",
-  "short_name": "BlueCarbonReg",
-  "description": "Decentralized blue carbon credit management on Solana blockchain",
+  "name": "OceanaVerse - Blue Carbon Registry",
+  "short_name": "OceanaVerse",
+  "description": "Decentralized blue carbon credit management on Solana blockchain by OceanaVerse",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3B82F6",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/OceanaVerse.png",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.svg",
+      "src": "/OceanaVerse.png",
       "sizes": "32x32",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }

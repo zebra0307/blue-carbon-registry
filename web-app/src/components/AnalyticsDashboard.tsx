@@ -216,92 +216,6 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        {/* Credit Flow Chart */}
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 lg:p-6 border-b border-gray-200">
-            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Carbon Credit Flow</h3>
-            <p className="text-xs lg:text-sm text-gray-600">Monthly trends for credit issuance, retirement, and trading</p>
-          </div>
-          <div className="p-4 lg:p-6">
-            {/* Simple bar chart representation */}
-            <div className="space-y-3 lg:space-y-4">
-              {chartData.map((data, index) => (
-                <div key={index} className="flex items-center space-x-2 lg:space-x-4">
-                  <div className="w-6 lg:w-8 text-xs font-medium text-gray-600 flex-shrink-0">{data.month}</div>
-                  <div className="flex-1 flex space-x-1 min-w-0">
-                    <div 
-                      className="bg-blue-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
-                      style={{ width: `${(data.issued / 35000) * 100}%`, minWidth: '16px' }}
-                    >
-                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.issued / 1000).toFixed(0)}k</span>
-                    </div>
-                    <div 
-                      className="bg-red-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
-                      style={{ width: `${(data.retired / 35000) * 100}%`, minWidth: '16px' }}
-                    >
-                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.retired / 1000).toFixed(0)}k</span>
-                    </div>
-                    <div 
-                      className="bg-green-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
-                      style={{ width: `${(data.traded / 35000) * 100}%`, minWidth: '16px' }}
-                    >
-                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.traded / 1000).toFixed(0)}k</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex items-center justify-center space-x-3 lg:space-x-6 text-xs">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-sm mr-1 lg:mr-2"></div>
-                <span>Issued</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-sm mr-1 lg:mr-2"></div>
-                <span>Retired</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-sm mr-1 lg:mr-2"></div>
-                <span>Traded</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Environmental Impact */}
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 lg:p-6 border-b border-gray-200">
-            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Environmental Impact</h3>
-            <p className="text-xs lg:text-sm text-gray-600">Real-world carbon offset achievements</p>
-          </div>
-          <div className="p-4 lg:p-6">
-            <div className="text-center mb-4 lg:mb-6">
-              <div className="text-2xl lg:text-4xl font-bold text-green-600 mb-2">
-                {analyticsData.carbonImpact.toLocaleString()}
-              </div>
-              <div className="text-xs lg:text-sm text-gray-600">tonnes CO₂ offset potential</div>
-              <div className="text-xs text-blue-600 mt-1">
-                {connected ? 'Based on registered projects' : 'Connect wallet to view impact'}
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="text-center p-3 lg:p-4 bg-gray-50 rounded-lg">
-                <TreePine className="h-6 w-6 lg:h-8 lg:w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">
-                  Detailed impact breakdown coming soon
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Will categorize by ecosystem type and project phase
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Project Analysis Section */}
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-4 lg:p-6 border-b border-gray-200">
@@ -456,6 +370,92 @@ export default function AnalyticsDashboard() {
               <strong>Next Update:</strong> Integration with Solana transaction history API 
               to display real credit activities
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Credit Flow Chart */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="p-4 lg:p-6 border-b border-gray-200">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Carbon Credit Flow</h3>
+            <p className="text-xs lg:text-sm text-gray-600">Monthly trends for credit issuance, retirement, and trading</p>
+          </div>
+          <div className="p-4 lg:p-6">
+            {/* Simple bar chart representation */}
+            <div className="space-y-3 lg:space-y-4">
+              {chartData.map((data, index) => (
+                <div key={index} className="flex items-center space-x-2 lg:space-x-4">
+                  <div className="w-6 lg:w-8 text-xs font-medium text-gray-600 flex-shrink-0">{data.month}</div>
+                  <div className="flex-1 flex space-x-1 min-w-0">
+                    <div 
+                      className="bg-blue-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
+                      style={{ width: `${(data.issued / 35000) * 100}%`, minWidth: '16px' }}
+                    >
+                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.issued / 1000).toFixed(0)}k</span>
+                    </div>
+                    <div 
+                      className="bg-red-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
+                      style={{ width: `${(data.retired / 35000) * 100}%`, minWidth: '16px' }}
+                    >
+                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.retired / 1000).toFixed(0)}k</span>
+                    </div>
+                    <div 
+                      className="bg-green-500 h-5 lg:h-6 rounded-sm flex items-center justify-center"
+                      style={{ width: `${(data.traded / 35000) * 100}%`, minWidth: '16px' }}
+                    >
+                      <span className="text-xs text-white font-medium hidden sm:inline">{(data.traded / 1000).toFixed(0)}k</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center justify-center space-x-3 lg:space-x-6 text-xs">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-sm mr-1 lg:mr-2"></div>
+                <span>Issued</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-red-500 rounded-sm mr-1 lg:mr-2"></div>
+                <span>Retired</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-sm mr-1 lg:mr-2"></div>
+                <span>Traded</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Environmental Impact */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="p-4 lg:p-6 border-b border-gray-200">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Environmental Impact</h3>
+            <p className="text-xs lg:text-sm text-gray-600">Real-world carbon offset achievements</p>
+          </div>
+          <div className="p-4 lg:p-6">
+            <div className="text-center mb-4 lg:mb-6">
+              <div className="text-2xl lg:text-4xl font-bold text-green-600 mb-2">
+                {analyticsData.carbonImpact.toLocaleString()}
+              </div>
+              <div className="text-xs lg:text-sm text-gray-600">tonnes CO₂ offset potential</div>
+              <div className="text-xs text-blue-600 mt-1">
+                {connected ? 'Based on registered projects' : 'Connect wallet to view impact'}
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="text-center p-3 lg:p-4 bg-gray-50 rounded-lg">
+                <TreePine className="h-6 w-6 lg:h-8 lg:w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">
+                  Detailed impact breakdown coming soon
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Will categorize by ecosystem type and project phase
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

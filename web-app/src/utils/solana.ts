@@ -259,31 +259,76 @@ export async function getAllUserProjects(wallet: any, ownerPublicKey: PublicKey)
     const allProgramAccounts = await connection.getProgramAccounts(PROGRAM_ID);
     console.log('🔧 Total program accounts found:', allProgramAccounts.length);
     
-    // For now, let's return all accounts as user projects since we have the accounts
-    // In a real implementation, you'd need to decode the data to check the actual owner field
-    const projectAccounts = allProgramAccounts;
+    // Decode account data and filter by actual owner
+    const userProjects: any[] = [];
     
-    console.log('🔧 Returning all accounts as user projects:', projectAccounts.length);
-
-    const projects = projectAccounts.map((account: any, index: number) => {
-      // Create sample project data based on the actual account addresses we found
-      const projectIds = ['subbu0111', 'BCP-0307', 'akshat_hr', 'zebra0307', '5o5', 'project_6'];
-      return {
-        projectId: projectIds[index] || `project_${index + 1}`,
-        owner: ownerPublicKey.toString(),
-        ipfsCid: `QmSampleIPFS${index + 1}`,
-        carbonTonsEstimated: (1000 + index * 500).toString(),
-        verificationStatus: index % 2 === 0,
-        creditsIssued: (5000 + index * 1000).toString(),
-        tokensMinted: (1000 + index * 200).toString(),
-        bump: 255,
-        publicKey: account.pubkey.toString()
-      };
-    });
+    for (const account of allProgramAccounts) {
+      try {
+        const data = account.account.data;
+        
+        if (data.length >= 40) {
+          // Decode the account data structure
+          let offset = 8; // Skip discriminator
+          
+          // Read project_id string (4 bytes length + string)
+          const projectIdLength = data.readUInt32LE(offset);
+          offset += 4;
+          const projectId = data.slice(offset, offset + projectIdLength).toString('utf8');
+          offset += projectIdLength;
+          
+          // Read owner pubkey (32 bytes)
+          const ownerBytes = data.slice(offset, offset + 32);
+          const accountOwner = new PublicKey(ownerBytes);
+          offset += 32;
+          
+          // Check if this account belongs to the requested owner
+          if (accountOwner.equals(ownerPublicKey)) {
+            // Read ipfs_cid string (4 bytes length + string)
+            const ipfsCidLength = data.readUInt32LE(offset);
+            offset += 4;
+            const ipfsCid = data.slice(offset, offset + ipfsCidLength).toString('utf8');
+            offset += ipfsCidLength;
+            
+            // Read carbon_tons_estimated (8 bytes)
+            const carbonTons = data.readBigUInt64LE(offset);
+            offset += 8;
+            
+            // Read verification_status (1 byte)
+            const verified = data.readUInt8(offset) === 1;
+            offset += 1;
+            
+            // Read credits_issued (8 bytes)
+            const creditsIssued = data.readBigUInt64LE(offset);
+            offset += 8;
+            
+            // Read tokens_minted (8 bytes)
+            const tokensMinted = data.readBigUInt64LE(offset);
+            
+            userProjects.push({
+              projectId: projectId,
+              owner: accountOwner.toString(),
+              ipfsCid: ipfsCid,
+              carbonTonsEstimated: carbonTons.toString(),
+              verificationStatus: verified,
+              creditsIssued: creditsIssued.toString(),
+              tokensMinted: tokensMinted.toString(),
+              bump: 255,
+              publicKey: account.pubkey.toString()
+            });
+            
+            console.log('✅ Found user project:', projectId, 'for owner:', accountOwner.toString());
+          }
+        }
+      } catch (decodeError) {
+        console.log('⚠️ Could not decode account:', account.pubkey.toString(), decodeError);
+      }
+    }
+    
+    console.log('🔧 Found', userProjects.length, 'projects for user:', ownerPublicKey.toString());
 
     return {
       success: true,
-      projects: projects
+      projects: userProjects
     };
   } catch (error: any) {
     console.error('Error fetching user projects:', error);

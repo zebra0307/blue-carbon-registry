@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SolanaWalletProvider } from '@/components/WalletProvider';
+
 import { Layout } from '@/components/Navigation';
 import { Plus, MapPin, TreePine, Calendar, FileText, Save } from 'lucide-react';
 
@@ -245,10 +245,8 @@ function RegisterProjectContent() {
 
 export default function RegisterProjectPage() {
   return (
-    <SolanaWalletProvider>
-      <Layout>
-        <RegisterProjectContent />
-      </Layout>
-    </SolanaWalletProvider>
+    <Layout>
+      <RegisterProjectContent />
+    </Layout>
   );
 }
