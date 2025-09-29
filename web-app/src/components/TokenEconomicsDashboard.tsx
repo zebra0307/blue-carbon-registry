@@ -127,7 +127,7 @@ export default function TokenEconomicsDashboard() {
     try {
       // Fetch real project data from blockchain using same logic as main app
       const { connection } = initializeSolana(wallet);
-      const PROGRAM_ID = new PublicKey('GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr');
+      const PROGRAM_ID = new PublicKey('6q7u2DH9vswSbpPYZLyaamAyBXQeXBCPfcgmi1dikuQB');
       const rawAccounts = await connection.getProgramAccounts(PROGRAM_ID);
       
       // Parse accounts to extract real project data

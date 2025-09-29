@@ -10,7 +10,7 @@ import {
 } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useMemo } from 'react';
-import TokenEconomicsDashboard from '../../components/TokenEconomicsDashboard';
+import BlueCarbonDashboard from './BlueCarbonDashboard';
 
 // Import wallet adapter CSS
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -34,7 +34,7 @@ export default function DashboardPage() {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <TokenEconomicsDashboard />
+          <BlueCarbonDashboard />
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

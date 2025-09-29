@@ -22,7 +22,7 @@ const IDL = idlJson as any;
 // Environment configuration
 export const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
 export const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
-export const PROGRAM_ID = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID || 'GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr');
+export const PROGRAM_ID = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID || '6q7u2DH9vswSbpPYZLyaamAyBXQeXBCPfcgmi1dikuQB');
 
 // Carbon credit token configuration
 export const CARBON_TOKEN_DECIMALS = 6;
@@ -343,29 +343,96 @@ export async function getAllProjects(wallet: any) {
   try {
     console.log('🌐 getAllProjects called');
     
-    // For reading data, we don't need a full wallet - just connection
-    const connection = new Connection(RPC_ENDPOINT, 'confirmed');
+    // Initialize program with wallet if available, otherwise just use connection
+    const { connection, program } = initializeSolana(wallet);
     
-    // Get accounts directly from the connection
+    // Get all program accounts without filtering to find all project accounts
+    // In a production environment, we should use proper filters
     const programAccounts = await connection.getProgramAccounts(PROGRAM_ID);
     console.log('🌐 Found program accounts:', programAccounts.length);
 
-    // Create sample projects from the account addresses we found
-    // Since we have 6 accounts, let's create 6 sample projects
-    const projects = programAccounts.map((account, index) => {
-      return {
-        projectId: `project_${index + 1}`,
-        owner: account.pubkey.toString().slice(0, 8) + '...',
-        ipfsCid: `sample_ipfs_${index + 1}`,
-        carbonTonsEstimated: (1000 + index * 500).toString(),
-        verificationStatus: index % 2 === 0,
-        creditsIssued: (5000 + index * 1000).toString(),
-        tokensMinted: (1000 + index * 200).toString(),
-        bump: 255,
-        publicKey: account.pubkey.toString()
-      };
-    });
+    // Parse actual project data from accounts
+    const projects = [];
+    
+    for (const account of programAccounts) {
+      try {
+        let project;
+        
+        // Manual deserialization of account data
+        const data = account.account.data;
+        
+        if (data.length >= 40) {
+          let offset = 8; // Skip discriminator
+          
+          try {
+            // Read project_id string
+            const projectIdLength = data.readUInt32LE(offset);
+            if (projectIdLength > 0 && projectIdLength < 100) { // Sanity check
+              offset += 4;
+              const projectId = data.slice(offset, offset + projectIdLength).toString('utf8');
+              offset += projectIdLength;
+              
+              // Read owner pubkey (32 bytes)
+              const ownerBytes = data.slice(offset, offset + 32);
+              const owner = new PublicKey(ownerBytes);
+              offset += 32;
+              
+              // Read ipfs_cid string
+              const ipfsCidLength = data.readUInt32LE(offset);
+              if (ipfsCidLength > 0 && ipfsCidLength < 100) { // Sanity check
+                offset += 4;
+                const ipfsCid = data.slice(offset, offset + ipfsCidLength).toString('utf8');
+                offset += ipfsCidLength;
+                
+                // Read carbon_tons_estimated (8 bytes)
+                const carbonTons = data.readBigUInt64LE(offset);
+                offset += 8;
+                
+                // Read verification_status (1 byte)
+                const verified = data.readUInt8(offset) === 1;
+                offset += 1;
+                
+                // Read credits_issued (8 bytes)
+                const creditsIssued = data.readBigUInt64LE(offset);
+                offset += 8;
+                
+                // Read tokens_minted (8 bytes)
+                const tokensMinted = data.readBigUInt64LE(offset);
+                offset += 8;
+                
+                // Read bump (1 byte)
+                const bump = data.readUInt8(offset);
+                
+                project = {
+                  projectId,
+                  owner: owner.toString(),
+                  ipfsCid,
+                  carbonTonsEstimated: carbonTons.toString(),
+                  verificationStatus: verified,
+                  creditsIssued: creditsIssued.toString(),
+                  tokensMinted: tokensMinted.toString(),
+                  bump,
+                  publicKey: account.pubkey.toString()
+                };
+              }
+            }
+          } catch (error) {
+            // Skip this entry if it doesn't match our expected format
+            console.debug('Account is not a project account, skipping:', 
+              error instanceof Error ? error.message : 'Unknown parsing error');
+          }
+        }
+        
+        if (project) {
+          projects.push(project);
+        }
+      } catch (e) {
+        console.error('Error parsing project account:', e);
+        // Skip this account if parsing fails
+      }
+    }
 
+    console.log('🌐 Successfully parsed projects:', projects.length);
     return {
       success: true,
       projects: projects

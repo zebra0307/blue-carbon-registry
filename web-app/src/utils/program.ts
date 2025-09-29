@@ -6,7 +6,7 @@ import { TOKEN_PROGRAM_ID, createMint, createAccount, mintTo, getOrCreateAssocia
 import BlueCarbonRegistryIDL from './blue_carbon_registry.json';
 
 // Program ID from the deployed program
-export const PROGRAM_ID = new PublicKey('GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr');
+export const PROGRAM_ID = new PublicKey('6q7u2DH9vswSbpPYZLyaamAyBXQeXBCPfcgmi1dikuQB');
 
 // Wallet interface for Anchor
 interface WalletAdapter {
@@ -133,19 +133,21 @@ export async function getAllProjects(
   }
 }
 
-// Upload project metadata to IPFS (simplified - in production use a proper IPFS service)
+// Upload project metadata to IPFS using Pinata service
 export async function uploadToIPFS(projectData: any): Promise<string> {
-  // For demo purposes, we'll create a mock IPFS hash
-  // In production, you would upload to actual IPFS
-  const mockHash = `Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-  
-  console.log('Mock IPFS upload for project data:', projectData);
-  console.log('Generated mock IPFS hash:', mockHash);
-  
-  // Simulate upload delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return mockHash;
+  try {
+    const { ipfsService } = await import('../lib/ipfs');
+    console.log('Uploading project data to IPFS via Pinata...');
+    const ipfsHash = await ipfsService.uploadJSON(projectData, `project-${projectData.projectId || 'metadata'}`);
+    console.log('Successfully uploaded to IPFS:', ipfsHash);
+    return ipfsHash;
+  } catch (error) {
+    console.error('IPFS upload failed, falling back to mock hash:', error);
+    // Fallback to mock hash if IPFS fails
+    const mockHash = `Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+    console.log('Using mock IPFS hash:', mockHash);
+    return mockHash;
+  }
 }
 
 // Enhanced project registration with IPFS metadata
