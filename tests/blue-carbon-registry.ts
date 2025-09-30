@@ -8,6 +8,7 @@ import {
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createMint,
   getOrCreateAssociatedTokenAccount,
   getAccount,
@@ -21,6 +22,7 @@ describe("blue-carbon-registry", () => {
 
   let projectOwner: Keypair;
   let projectPda: PublicKey;
+  let registryPda: PublicKey;
   let tokenMint: PublicKey;
   let projectTokenAccount: PublicKey;
   let investorTokenAccount: PublicKey;
@@ -37,20 +39,28 @@ describe("blue-carbon-registry", () => {
 
   before(async () => {
     try {
-      projectOwner = Keypair.generate();
-
-      // Airdrop SOL to project owner
-      const airdropSignature = await provider.connection.requestAirdrop(
-        projectOwner.publicKey,
-        2 * anchor.web3.LAMPORTS_PER_SOL
-      );
-      await provider.connection.confirmTransaction(airdropSignature, "confirmed");
+      // Use the provider's wallet as the project owner (it already has SOL)
+      projectOwner = (provider.wallet as anchor.Wallet).payer;
 
       // Derive the project PDA
       [projectPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("project"), projectOwner.publicKey.toBuffer(), Buffer.from(projectId)],
         program.programId
       );
+      
+      // Derive the registry PDA
+      [registryPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("registry")],
+        program.programId
+      );
+      
+      // Derive the carbon token mint PDA
+      const [carbonTokenMintPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("carbon_token_mint")],
+        program.programId
+      );
+      
+      tokenMint = carbonTokenMintPda;
       
       console.log("Test setup completed successfully");
     } catch (error) {
@@ -59,11 +69,59 @@ describe("blue-carbon-registry", () => {
     }
   });
 
+  it("Initializes the registry successfully", async () => {
+    try {
+      // Try to fetch the registry first - if it exists, skip initialization
+      const existingRegistry = await program.account.globalRegistry.fetch(registryPda);
+      console.log("Registry already exists, skipping initialization");
+      
+      // Verify existing registry has correct properties
+      assert.equal(existingRegistry.admin.toString(), projectOwner.publicKey.toString());
+      console.log("✅ Existing registry verified successfully");
+    } catch (error) {
+      // Registry doesn't exist, initialize it
+      console.log("Registry not found, initializing...");
+      
+      // Derive the mint authority PDA
+      const [mintAuthorityPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("mint_authority")],
+        program.programId
+      );
+
+      const tx = await program.methods
+        .initializeRegistry(TOKEN_DECIMALS)
+        .accounts({
+          registry: registryPda,
+          carbonTokenMint: tokenMint,
+          mintAuthority: mintAuthorityPda,
+          admin: projectOwner.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        } as any)
+        .signers([projectOwner])
+        .rpc();
+      
+      console.log("Registry initialization transaction signature:", tx);
+      
+      // Fetch the registry account and verify its data
+      const registryAccount = await program.account.globalRegistry.fetch(registryPda);
+      
+      assert.equal(registryAccount.totalCreditsIssued.toString(), "0");
+      assert.equal(registryAccount.totalProjects.toString(), "0");
+      assert.equal(registryAccount.admin.toString(), projectOwner.publicKey.toString());
+      
+      console.log("✅ Registry initialized successfully");
+    }
+  });
+
   it("Registers a project successfully", async () => {
+    const carbonTonsEstimated = new anchor.BN(1000); // 1000 tons estimated
     const tx = await program.methods
-      .registerProject(projectId, ipfsCid)
+      .registerProject(projectId, ipfsCid, carbonTonsEstimated)
       .accounts({
         project: projectPda,
+        registry: registryPda,
         projectOwner: projectOwner.publicKey,
         systemProgram: SystemProgram.programId,
       } as any)
@@ -85,26 +143,43 @@ describe("blue-carbon-registry", () => {
     
     console.log("✅ Project registered successfully");
   });
+
+  it("Verifies a project successfully", async () => {
+    const verifiedCarbonTons = new anchor.BN(800); // Verify 800 tons
+    
+    // Note: This assumes the project owner can verify the project
+    // In a real scenario, this would be done by an admin
+    const tx = await program.methods
+      .verifyProject(verifiedCarbonTons)
+      .accounts({
+        project: projectPda,
+        registry: registryPda,
+        admin: projectOwner.publicKey, // Using project owner as admin for testing
+      } as any)
+      .signers([projectOwner])
+      .rpc();
+    
+    console.log("Project verification transaction signature:", tx);
+    
+    // Fetch the project account and verify its status
+    const projectAccount = await program.account.project.fetch(projectPda);
+    console.log("Project verification status:", projectAccount.verificationStatus);
+    console.log("Verified carbon tons:", projectAccount.carbonTonsEstimated.toString());
+    
+    console.log("✅ Project verified successfully");
+  });
   
   it("Mints credits successfully", async () => {
-    // Create token mint with project PDA as mint authority
-    tokenMint = await createMint(
-      provider.connection,
-      projectOwner,
-      projectPda, // Project PDA is the mint authority
-      null,
-      6, // TOKEN_DECIMALS for the token
-    );
+    // Use the carbon token mint from the registry (already created)
+    console.log("Token mint:", tokenMint.toString());
 
-    console.log("Token mint created:", tokenMint.toString());
-
-    // Create token account for the project owner (not PDA)
+    // Create token account for the project owner
     projectTokenAccount = (
       await getOrCreateAssociatedTokenAccount(
         provider.connection,
         projectOwner,
         tokenMint,
-        projectOwner.publicKey, // Owned by project owner, not PDA
+        projectOwner.publicKey,
       )
     ).address;
 
@@ -112,15 +187,24 @@ describe("blue-carbon-registry", () => {
 
     const amountToMint = new anchor.BN(INITIAL_MINT_AMOUNT * (10 ** TOKEN_DECIMALS)); // 1000 tokens with 6 decimals
     
+    // Derive the mint authority PDA
+    const [mintAuthorityPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("mint_authority")],
+      program.programId
+    );
+
     const tx = await program.methods
-      .mintCredits(amountToMint)
+      .mintVerifiedCredits(amountToMint)
       .accounts({
         project: projectPda,
-        owner: projectOwner.publicKey,
-        mint: tokenMint,
+        registry: registryPda,
+        carbonTokenMint: tokenMint,
         recipientTokenAccount: projectTokenAccount,
-        mintAuthority: projectPda,
+        mintAuthority: mintAuthorityPda,
+        owner: projectOwner.publicKey,
+        recipient: projectOwner.publicKey,
         tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       } as any)
       .signers([projectOwner])
       .rpc();
