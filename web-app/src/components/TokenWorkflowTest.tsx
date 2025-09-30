@@ -14,8 +14,7 @@ import {
   getGlobalRegistryData,
   getProjectData,
   getGlobalRegistryPDA,
-  getCarbonTokenMintPDA,
-  getRegistryMintAuthorityPDA
+  getCarbonTokenMintPDA
 } from '../utils/solana';
 
 interface TestStep {
@@ -65,15 +64,14 @@ export default function TokenWorkflowTest() {
     // Generate system info on load
     const [registryPDA] = getGlobalRegistryPDA();
     const [carbonMintPDA] = getCarbonTokenMintPDA();
-    const [mintAuthorityPDA] = getRegistryMintAuthorityPDA();
     
     setTestData(prev => ({
       ...prev,
       systemInfo: {
         registryPDA: registryPDA.toString(),
         carbonMintPDA: carbonMintPDA.toString(),
-        mintAuthorityPDA: mintAuthorityPDA.toString(),
-        programId: 'GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr'
+        mintAuthorityPDA: registryPDA.toString(), // Registry is now the mint authority
+        programId: '6q7u2DH9vswSbpPYZLyaamAyBXQeXBCPfcgmi1dikuQB' // Updated to current program ID
       }
     }));
   }, []);

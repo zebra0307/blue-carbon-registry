@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRegistryStats, useCarbonBalance, useUserProjects } from '@/hooks/useBlockchainData';
+import RegistryStatusBanner from './RegistryStatusBanner';
 import { 
   TreePine, 
   BarChart3, 
@@ -127,6 +128,9 @@ export default function DashboardContent() {
 
   return (
     <div className="space-y-4 lg:space-y-6">
+      {/* Registry Status Banner */}
+      <RegistryStatusBanner />
+      
       {/* Welcome Section - Responsive */}
       <div className="bg-gradient-to-r from-blue-600 via-teal-500 to-green-600 rounded-xl shadow-lg text-white p-4 sm:p-6 lg:p-8 relative overflow-hidden">
         <div className="relative z-10">

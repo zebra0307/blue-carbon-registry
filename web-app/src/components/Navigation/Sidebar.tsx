@@ -22,7 +22,6 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'My Projects', href: '/projects', icon: TreePine },
   { name: 'Register Project', href: '/register', icon: Plus },
-  { name: 'Upload Documents', href: '/upload', icon: FileText },
   { name: 'Mint Credits', href: '/mint', icon: Coins },
   { name: 'Transfer Credits', href: '/transfer', icon: ArrowRightLeft },
   { name: 'Retire Credits', href: '/retire', icon: Award },

@@ -12,6 +12,7 @@ import {
   getAllUserProjects,
   getAllProjects
 } from '@/utils/solana';
+import { withRegistryCheck } from '@/utils/registryManager';
 
 // Types for blockchain data
 export interface Project {
@@ -65,10 +66,13 @@ export function useRegistryStats() {
 
     try {
       setLoading(true);
-      const registryData = await getGlobalRegistryData(wallet);
       
-      if (registryData && registryData.success && registryData.data) {
-        const data = registryData.data;
+      const result = await withRegistryCheck(wallet, async () => {
+        return await getGlobalRegistryData(wallet);
+      });
+      
+      if (result.success && result.data?.success && result.data.data) {
+        const data = result.data.data;
         setStats({
           totalProjects: parseInt(data.totalProjects) || 0,
           totalCredits: parseInt(data.totalCreditsIssued) || 0,
@@ -121,16 +125,19 @@ export function useUserProjects() {
       setLoading(true);
       console.log('🔍 Fetching projects for wallet:', wallet.publicKey.toString());
       
-      // Get all projects owned by the current wallet
-      const response = await getAllUserProjects(wallet, wallet.publicKey);
+      // Use registry check wrapper to ensure registry exists
+      const result = await withRegistryCheck(wallet, async () => {
+        return await getAllUserProjects(wallet, wallet.publicKey!);
+      });
+
       const userProjects: Project[] = [];
 
-      console.log('🚀 getAllUserProjects response:', response);
+      console.log('🚀 getAllUserProjects result:', result);
 
-      if (response.success && response.projects) {
-        console.log('✅ Found projects:', response.projects.length, response.projects);
+      if (result.success && result.data?.success && result.data.projects) {
+        console.log('✅ Found projects:', result.data.projects.length, result.data.projects);
         
-        response.projects.forEach((data: any) => {
+        result.data.projects.forEach((data: any) => {
           const project: Project = {
             id: data.projectId,
             name: `Blue Carbon Project ${data.projectId}`,
@@ -153,7 +160,7 @@ export function useUserProjects() {
           userProjects.push(project);
         });
       } else {
-        console.log('No projects found or error:', response.error);
+        console.log('No projects found or error:', result.error || result.data?.error);
       }
 
       setProjects(userProjects);

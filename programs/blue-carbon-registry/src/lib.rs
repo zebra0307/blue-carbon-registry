@@ -65,10 +65,10 @@ pub mod blue_carbon_registry {
         registry.total_credits_issued = 0;
         registry.total_projects = 0;
         registry.admin = ctx.accounts.admin.key();
-        registry.mint_authority = ctx.accounts.mint_authority.key();
+        registry.mint_authority = registry.key(); // Use registry itself as mint authority
         registry.carbon_token_mint = ctx.accounts.carbon_token_mint.key();
         registry.bump = ctx.bumps.registry;
-        registry.mint_authority_bump = ctx.bumps.mint_authority;
+        registry.mint_authority_bump = ctx.bumps.registry; // Same bump as registry
         
         msg!("Carbon Credit Registry initialized successfully!");
         msg!("Admin: {}", registry.admin);
@@ -136,7 +136,6 @@ pub mod blue_carbon_registry {
         amount: u64
     ) -> Result<()> {
         let project = &mut ctx.accounts.project;
-        let registry = &mut ctx.accounts.registry;
         
         // Ensure project is verified
         require!(
@@ -145,22 +144,26 @@ pub mod blue_carbon_registry {
         );
 
         // Ensure we don't exceed the verified carbon tons (1 token = 1 ton)
+        // Scale carbon_tons_estimated to match token precision (6 decimals)
+        let verified_capacity = project.carbon_tons_estimated * 10u64.pow(6);
         require!(
-            project.tokens_minted + amount <= project.carbon_tons_estimated,
+            project.tokens_minted + amount <= verified_capacity,
             ErrorCode::ExceedsVerifiedCapacity
         );
+
+        // Get the bump from registry without mutable borrow
+        let registry_bump = ctx.accounts.registry.bump;
 
         // Create the context for the `mint_to` instruction of the SPL Token Program.
         let cpi_accounts = MintTo {
             mint: ctx.accounts.carbon_token_mint.to_account_info(),
             to: ctx.accounts.recipient_token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
+            authority: ctx.accounts.registry.to_account_info(),
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
 
-        // Seeds for the PDA mint authority
-        let mint_authority_bump = registry.mint_authority_bump;
-        let seeds = &[b"mint_authority".as_ref(), &[mint_authority_bump]];
+        // Seeds for the registry PDA (now the mint authority)
+        let seeds = &[b"registry_v3".as_ref(), &[registry_bump]];
         let signer_seeds = &[&seeds[..]];
 
         // Call the `mint_to` function to issue the tokens
@@ -170,6 +173,7 @@ pub mod blue_carbon_registry {
         )?;
 
         // Update project and registry tracking
+        let registry = &mut ctx.accounts.registry;
         project.credits_issued += amount;
         project.tokens_minted += amount;
         registry.total_credits_issued += amount;
@@ -444,32 +448,26 @@ pub mod blue_carbon_registry {
 
 // Account validation for initialize_registry instruction
 #[derive(Accounts)]
+#[instruction(_decimals: u8)]
 pub struct InitializeRegistry<'info> {
     #[account(
         init,
         payer = admin,
         space = 8 + GlobalRegistry::LEN,
-        seeds = [b"registry"],
+        seeds = [b"registry_v3"],
         bump
     )]
     pub registry: Account<'info, GlobalRegistry>,
 
-    #[account(
+        #[account(
         init,
         payer = admin,
-        mint::decimals = 6,
-        mint::authority = mint_authority,
-        seeds = [b"carbon_token_mint"],
+        mint::decimals = _decimals,
+        mint::authority = registry,
+        seeds = [b"carbon_token_mint_v3"],
         bump
     )]
     pub carbon_token_mint: Account<'info, Mint>,
-
-    /// CHECK: This is the mint authority PDA
-    #[account(
-        seeds = [b"mint_authority"],
-        bump
-    )]
-    pub mint_authority: AccountInfo<'info>,
 
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -498,7 +496,7 @@ pub struct RegisterProject<'info> {
 
     #[account(
         mut,
-        seeds = [b"registry"],
+        seeds = [b"registry_v3"],
         bump = registry.bump
     )]
     pub registry: Account<'info, GlobalRegistry>,
@@ -520,7 +518,7 @@ pub struct VerifyProject<'info> {
     pub project: Account<'info, Project>,
 
     #[account(
-        seeds = [b"registry"],
+        seeds = [b"registry_v3"],
         bump = registry.bump,
         has_one = admin
     )]
@@ -542,14 +540,14 @@ pub struct MintVerifiedCredits<'info> {
 
     #[account(
         mut,
-        seeds = [b"registry"],
+        seeds = [b"registry_v3"],
         bump = registry.bump
     )]
     pub registry: Account<'info, GlobalRegistry>,
 
     #[account(
         mut,
-        seeds = [b"carbon_token_mint"],
+        seeds = [b"carbon_token_mint_v3"],
         bump
     )]
     pub carbon_token_mint: Account<'info, Mint>,
@@ -560,13 +558,6 @@ pub struct MintVerifiedCredits<'info> {
         associated_token::authority = recipient
     )]
     pub recipient_token_account: Account<'info, TokenAccount>,
-
-    /// CHECK: This is the mint authority PDA
-    #[account(
-        seeds = [b"mint_authority"],
-        bump
-    )]
-    pub mint_authority: AccountInfo<'info>,
 
     pub owner: Signer<'info>,
     pub recipient: SystemAccount<'info>,
@@ -996,7 +987,7 @@ pub struct RegisterBlueProject<'info> {
 
     #[account(
         mut,
-        seeds = [b"registry"],
+        seeds = [b"registry_v3"],
         bump = registry.bump
     )]
     pub registry: Account<'info, GlobalRegistry>,

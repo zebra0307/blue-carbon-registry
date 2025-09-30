@@ -80,7 +80,7 @@ export function initializeSolana(wallet?: any) {
  */
 export function getGlobalRegistryPDA(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('registry')],
+    [Buffer.from('registry_v3')],
     PROGRAM_ID
   );
 }
@@ -95,15 +95,7 @@ export function getCarbonTokenMintPDA(): [PublicKey, number] {
   );
 }
 
-/**
- * Get the Mint Authority PDA for the registry (new version)
- */
-export function getRegistryMintAuthorityPDA(): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('mint_authority')],
-    PROGRAM_ID
-  );
-}
+// Note: Mint authority is now the registry itself, no separate PDA needed
 
 /**
  * Get project PDA from owner and project ID
@@ -131,14 +123,12 @@ export async function initializeRegistry(wallet: any) {
 
     const [registryPDA] = getGlobalRegistryPDA();
     const [carbonTokenMintPDA] = getCarbonTokenMintPDA();
-    const [mintAuthorityPDA] = getRegistryMintAuthorityPDA();
 
     const tx = await program.methods
       .initializeRegistry(CARBON_TOKEN_DECIMALS)
       .accounts({
         registry: registryPDA,
         carbonTokenMint: carbonTokenMintPDA,
-        mintAuthority: mintAuthorityPDA,
         admin: wallet.publicKey,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: web3.SystemProgram.programId,
@@ -493,7 +483,6 @@ export async function mintVerifiedCredits(
     const [projectPDA] = getProjectPDA(wallet.publicKey, projectId);
     const [registryPDA] = getGlobalRegistryPDA();
     const [carbonTokenMintPDA] = getCarbonTokenMintPDA();
-    const [mintAuthorityPDA] = getRegistryMintAuthorityPDA();
 
     // Get or create associated token account for recipient
     const recipientTokenAccount = getAssociatedTokenAddressSync(
@@ -508,7 +497,6 @@ export async function mintVerifiedCredits(
         registry: registryPDA,
         carbonTokenMint: carbonTokenMintPDA,
         recipientTokenAccount: recipientTokenAccount,
-        mintAuthority: mintAuthorityPDA,
         owner: wallet.publicKey,
         recipient: recipient,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -904,3 +892,6 @@ export interface GlobalRegistry {
   bump: number;
   mintAuthorityBump: number;
 }
+
+// Export alias for registerProject to match our registration form
+export const registerProject = registerProjectEnhanced;

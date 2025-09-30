@@ -1,11 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-
+import React, { useState, useRef } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Layout } from '@/components/Navigation';
-import { Plus, MapPin, TreePine, Calendar, FileText, Save } from 'lucide-react';
+import { Plus, MapPin, TreePine, Calendar, FileText, Save, Upload, Camera, X, File, Image } from 'lucide-react';
+import { uploadFilesToIPFS } from '@/utils/ipfs';
+import { registerProject } from '@/utils/solana';
+import { withRegistryCheck } from '@/utils/registryManager';
 
 function RegisterProjectContent() {
+  const wallet = useWallet();
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -18,6 +22,13 @@ function RegisterProjectContent() {
     certificationStandard: ''
   });
 
+  // File upload state
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -26,10 +37,102 @@ function RegisterProjectContent() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // File handling functions
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+  };
+
+  const handleCameraCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const capturedFiles = Array.from(event.target.files || []);
+    setFiles(prevFiles => [...prevFiles, ...capturedFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const openFileSelector = () => {
+    fileInputRef.current?.click();
+  };
+
+  const openCamera = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Project Registration Data:', formData);
-    // TODO: Integrate with blockchain
+    
+    if (!wallet.connected || !wallet.publicKey) {
+      alert('Please connect your wallet to register a project');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+
+      // Upload files to IPFS first
+      let ipfsCid = '';
+      if (files.length > 0) {
+        setUploadProgress(25);
+        const uploadResult = await uploadFilesToIPFS(files);
+        if (uploadResult.success && uploadResult.results && uploadResult.results.length > 0) {
+          // Use the first successful upload CID as the main project CID
+          const firstSuccessfulUpload = uploadResult.results.find(r => r.cid);
+          if (firstSuccessfulUpload && firstSuccessfulUpload.cid) {
+            ipfsCid = firstSuccessfulUpload.cid;
+          }
+        }
+        setUploadProgress(50);
+      }
+
+      // Prepare project data for blockchain
+      const projectData = {
+        project_id: formData.name.replace(/\s+/g, '_').toLowerCase(),
+        ipfs_cid: ipfsCid,
+        carbon_tons_estimated: parseInt(formData.estimatedCredits) || 0,
+      };
+
+      setUploadProgress(75);
+
+      // Register project on blockchain with registry check
+      const result = await withRegistryCheck(wallet, async () => {
+        return await registerProject(
+          wallet,
+          projectData.project_id,
+          projectData.ipfs_cid,
+          projectData.carbon_tons_estimated
+        );
+      });
+
+      setUploadProgress(100);
+
+      if (result.success) {
+        alert('Project registered successfully!');
+        // Reset form
+        setFormData({
+          name: '',
+          location: '',
+          type: '',
+          areaSize: '',
+          estimatedCredits: '',
+          vintage: '',
+          developer: '',
+          description: '',
+          certificationStandard: ''
+        });
+        setFiles([]);
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      alert(`Registration failed: ${error.message || 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -221,20 +324,128 @@ function RegisterProjectContent() {
             </div>
           </div>
 
+          {/* File Upload Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Project Documents & Photos
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">Upload project documents, photos, or capture images</p>
+                
+                {/* Upload Buttons */}
+                <div className="flex justify-center space-x-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={openFileSelector}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <File className="h-4 w-4" />
+                    <span>Select Files</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openCamera}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Camera className="h-4 w-4" />
+                    <span>Take Photo</span>
+                  </button>
+                </div>
+
+                {/* File Inputs (Hidden) */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraCapture}
+                  className="hidden"
+                />
+
+                <p className="text-xs text-gray-500">
+                  Supported: Images (JPG, PNG), PDFs, Word documents (max 10MB each)
+                </p>
+              </div>
+
+              {/* File List */}
+              {files.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Files:</h4>
+                  <div className="space-y-2">
+                    {files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <div className="flex items-center space-x-2">
+                          {file.type.startsWith('image/') ? (
+                            <Image className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <File className="h-4 w-4 text-gray-500" />
+                          )}
+                          <span className="text-sm text-gray-700 truncate max-w-xs">
+                            {file.name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                    <span>Uploading...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Submit Button */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={uploading}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save as Draft
             </button>
             <button
               type="submit"
-              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={uploading || !wallet.connected}
+              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-4 w-4" />
-              <span>Register Project</span>
+              <span>
+                {uploading ? 'Registering...' : !wallet.connected ? 'Connect Wallet' : 'Register Project'}
+              </span>
             </button>
           </div>
         </form>
