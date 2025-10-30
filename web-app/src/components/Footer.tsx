@@ -22,10 +22,10 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const socialLinks = [
-    { name: 'Twitter', href: '#', icon: Twitter },
-    { name: 'LinkedIn', href: '#', icon: Linkedin },
-    { name: 'GitHub', href: '#', icon: Github },
-    { name: 'YouTube', href: '#', icon: Youtube },
+    { name: 'Twitter', href: 'https://x.com/zebradotsol', icon: Twitter },
+    { name: 'LinkedIn', href: 'https://www.linkedin.com/in/satyendra-yadav-8b0140323/', icon: Linkedin },
+    { name: 'GitHub', href: 'https://github.com/zebra0307/blue-carbon-registry', icon: Github },
+    { name: 'YouTube', href: 'https://www.youtube.com/watch?v=p-SEGb1DN_c', icon: Youtube },
   ];
 
   const companyLinks = [

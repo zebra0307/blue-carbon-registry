@@ -14,7 +14,11 @@ import {
   ShoppingCart, 
   TrendingUp,
   PieChart,
-  ChevronRight
+  ChevronRight,
+  CheckSquare,
+  Activity,
+  MapPin,
+  Shield
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -22,12 +26,16 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'My Projects', href: '/projects', icon: TreePine },
   { name: 'Register Project', href: '/register', icon: Plus },
+  { name: 'Verification', href: '/verification', icon: CheckSquare },
+  { name: 'Monitoring', href: '/monitoring', icon: Activity },
+  { name: 'Field Data', href: '/field-data', icon: MapPin },
   { name: 'Mint Credits', href: '/mint', icon: Coins },
   { name: 'Transfer Credits', href: '/transfer', icon: ArrowRightLeft },
   { name: 'Retire Credits', href: '/retire', icon: Award },
   { name: 'Token Economics', href: '/token-economics', icon: TrendingUp },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart },
+  { name: 'Admin', href: '/admin', icon: Shield },
 ];
 
 interface SidebarProps {
