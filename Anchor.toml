@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-blue_carbon_registry = "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr"
+blue_carbon_registry = "6q7u2DH9vswSbpPYZLyaamAyBXQeXBCPfcgmi1dikuQB"
 
 [programs.devnet]
 blue_carbon_registry = "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr"
@@ -15,7 +15,7 @@ blue_carbon_registry = "GDEzy7wZw5VqSpBr9vDHiMiFa9QahNeZ8UfETMfVPakr"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

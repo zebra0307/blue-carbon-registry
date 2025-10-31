@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import {
@@ -58,28 +58,24 @@ export function useRegistryStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRegistryData = async () => {
-    if (!isWalletConnected(wallet)) {
+  const loadRegistryData = useCallback(async () => {
+    if (!wallet.connected || !wallet.publicKey) {
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+      const result = await getGlobalRegistryData(wallet);
       
-      const result = await withRegistryCheck(wallet, async () => {
-        return await getGlobalRegistryData(wallet);
-      });
-      
-      if (result.success && result.data?.success && result.data.data) {
-        const data = result.data.data;
+      if (result.success && result.data) {
         setStats({
-          totalProjects: parseInt(data.totalProjects) || 0,
-          totalCredits: parseInt(data.totalCreditsIssued) || 0,
-          totalInvestment: parseInt(data.totalCreditsIssued) * 25.50 || 0,
-          carbonSequestered: parseInt(data.totalCreditsIssued) || 0,
-          ecosystemArea: parseInt(data.totalProjects) * 100 || 0,
-          communityImpact: parseInt(data.totalProjects) * 1000 || 0
+          totalProjects: result.data.totalProjects || 0,
+          totalCredits: result.data.totalCreditsIssued || 0,
+          totalInvestment: 0, // Not tracked in current registry
+          carbonSequestered: 0, // Not tracked in current registry
+          ecosystemArea: 0, // Not tracked in current registry
+          communityImpact: 0, // Not tracked in current registry
         });
       }
       setError(null);
@@ -89,11 +85,11 @@ export function useRegistryStats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wallet.connected, wallet.publicKey]);
 
   useEffect(() => {
     loadRegistryData();
-  }, [wallet.connected, wallet.publicKey]);
+  }, [loadRegistryData]);
 
   return { stats, loading, error, refetch: loadRegistryData };
 }
@@ -105,7 +101,7 @@ export function useUserProjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserProjects = async () => {
+  const loadUserProjects = useCallback(async () => {
     console.log('🔄 loadUserProjects called, wallet state:', {
       connected: wallet.connected,
       publicKey: wallet.publicKey?.toString(),
@@ -171,7 +167,7 @@ export function useUserProjects() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wallet.connected, wallet.publicKey]);
 
   useEffect(() => {
     console.log('🔥 useUserProjects useEffect triggered:', {
@@ -179,7 +175,7 @@ export function useUserProjects() {
       publicKey: wallet.publicKey?.toString()
     });
     loadUserProjects();
-  }, [wallet.connected, wallet.publicKey]);
+  }, [loadUserProjects]);
 
   return { projects, loading, error, refetch: loadUserProjects };
 }
@@ -191,7 +187,7 @@ export function useCarbonBalance() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadBalance = async () => {
+  const loadBalance = useCallback(async () => {
     if (!isWalletConnected(wallet) || !wallet.publicKey) {
       setLoading(false);
       return;
@@ -209,11 +205,11 @@ export function useCarbonBalance() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wallet.connected, wallet.publicKey]);
 
   useEffect(() => {
     loadBalance();
-  }, [wallet.connected, wallet.publicKey]);
+  }, [loadBalance]);
 
   return { balance, loading, error, refetch: loadBalance };
 }
@@ -302,7 +298,7 @@ export function useTokenEconomics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTokenEconomics = async () => {
+  const loadTokenEconomics = useCallback(async () => {
     if (!isWalletConnected(wallet)) {
       setLoading(false);
       return;
@@ -334,11 +330,11 @@ export function useTokenEconomics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wallet.connected]);
 
   useEffect(() => {
     loadTokenEconomics();
-  }, [wallet.connected]);
+  }, [loadTokenEconomics]);
 
   return { economics, loading, error, refetch: loadTokenEconomics };
 }

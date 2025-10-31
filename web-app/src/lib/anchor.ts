@@ -33,7 +33,7 @@ export function getProgram(
  */
 export function getRegistryPda(programId: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('global_registry')],
+    [Buffer.from('registry_v3')],
     programId
   );
 }
@@ -41,15 +41,17 @@ export function getRegistryPda(programId: PublicKey): [PublicKey, number] {
 /**
  * Get a project PDA
  * @param projectId Unique project identifier
+ * @param owner Project owner public key
  * @param programId Program ID
  * @returns [PDA, bump]
  */
 export function getProjectPda(
   projectId: string,
+  owner: PublicKey,
   programId: PublicKey
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('project'), Buffer.from(projectId)],
+    [Buffer.from('project'), owner.toBuffer(), Buffer.from(projectId)],
     programId
   );
 }
@@ -128,9 +130,9 @@ export function getMarketplaceListingPda(
  * @param programId Program ID
  * @returns [PDA, bump]
  */
-export function getCarbonCreditMintPda(programId: PublicKey): [PublicKey, number] {
+export function getCarbonMintPda(programId: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('carbon_credit_mint')],
+    [Buffer.from('carbon_token_mint_v3')],
     programId
   );
 }

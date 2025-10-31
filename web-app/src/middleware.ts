@@ -13,6 +13,12 @@ const protectedRoutes = {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // DEVELOPMENT MODE: Skip authentication for local development
+  // TODO: Remove this before production deployment
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.next();
+  }
+  
   // Check if the route is protected
   const matchedRoute = Object.keys(protectedRoutes).find(route => 
     pathname.startsWith(route)

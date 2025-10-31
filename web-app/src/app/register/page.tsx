@@ -386,9 +386,9 @@ function RegisterProjectContent() {
                       <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                         <div className="flex items-center space-x-2">
                           {file.type.startsWith('image/') ? (
-                            <Image className="h-4 w-4 text-blue-500" />
+                            <Image className="h-4 w-4 text-blue-500" aria-label="Image file" />
                           ) : (
-                            <File className="h-4 w-4 text-gray-500" />
+                            <File className="h-4 w-4 text-gray-500" aria-label="Document file" />
                           )}
                           <span className="text-sm text-gray-700 truncate max-w-xs">
                             {file.name}

@@ -9,7 +9,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { UserRole } from '@/types/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { Shield, Users, Settings, Database, Loader2 } from 'lucide-react';
-import { getProgram, getRegistryPda, getProgramId, getCarbonCreditMintPda } from '@/lib/anchor';
+import { getProgram, getRegistryPda, getProgramId, getCarbonMintPda } from '@/lib/anchor';
 import { getErrorMessage, isUserRejection } from '@/lib/errors';
 
 export default function AdminPage() {
@@ -71,6 +71,7 @@ function AdminDashboard() {
     };
 
     checkRegistry();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet.publicKey, connection]);
 
   const handleInitializeRegistry = async () => {
@@ -86,7 +87,7 @@ function AdminDashboard() {
       const program = getProgram(connection, wallet as any);
       const programId = getProgramId();
       const [registryPda] = getRegistryPda(programId);
-      const [carbonTokenMintPda] = getCarbonCreditMintPda(programId);
+      const [carbonTokenMintPda] = getCarbonMintPda(programId);
 
       // Call initialize_registry instruction with decimals parameter
       const tx = await program.methods
